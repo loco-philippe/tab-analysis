@@ -15,7 +15,7 @@ This package contains the following classes and functions:
     
 """
 #from pathlib import Path
-from tab_analysis.analysis import AnaField
+from tab_analysis.analysis import AnaField, AnaRelation
 
 #path = Path(ntv_pandas.pandas_ntv_connector.__file__).parent
 
