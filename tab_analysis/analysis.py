@@ -43,20 +43,14 @@ class AnaField:
 
     - **iobj** : Dataset or Observation associated to the Analysis object
     '''    
-    id_field = {}
-
-    @classmethod 
-    @property
-    def field_id(cls):
-        return {val:key for key, val in cls.id_field.items()}
-    
+   
     def __init__(self, idfield, lencodec, mincodec=None, maxcodec=None, hashf=None):
         self.idfield = idfield
         self.lencodec = lencodec
         self.mincodec = mincodec
         self.maxcodec = maxcodec
         self.hashf = hashf
-        AnaField.id_field[idfield] = self
+        #AnaField.id_field[idfield] = self
 
     def __repr__(self):
         rep = IDFIELD + ': ' + str(self.idfield) + '\n' + '    ' 
@@ -68,7 +62,7 @@ class AnaField:
     def to_dict(self, full=False, idfield=False, notnone=True):
         dic = {LENCODEC: self.lencodec, MINCODEC: self.mincodec, 
                MAXCODEC: self.maxcodec, HASHF: self.hashf}
-        if idfield:
+        if idfield or full:
             dic[IDFIELD] = self.idfield
         if full:
             dic |= {RATECODEC: self.ratecodec, DMINCODEC: self.dmincodec,
@@ -76,7 +70,7 @@ class AnaField:
         if notnone:
             return Util.reduce_dic(dic)
         return dic
-    
+        
     @property
     def ratecodec(self):
         if (self.maxcodec and self.mincodec and self.lencodec and 
@@ -117,10 +111,11 @@ class AnaRelation:
     '''    
     
     def __init__(self, relation, dist, hashr=None):
-        self.relation = []
-        if isinstance(relation, (list, tuple)) and len(relation) == 2:
-            self.relation = [rel if isinstance(rel, AnaField) else 
-                AnaField.id_field[rel] for rel in relation]
+        self.relation = relation
+        #if isinstance(relation, (list, tuple)) and len(relation) == 2:
+            #self.relation = relation 
+            #self.relation = [rel if isinstance(rel, AnaField) else 
+            #    AnaField.id_field[rel] for rel in relation]
         self.dist = dist
         self.hashr = hashr
 
@@ -149,7 +144,7 @@ class AnaRelation:
     @property
     def id_relation(self):
         if self.relation:
-            return [AnaField.field_id[rel] for rel in self.relation]
+            return [rel.idfield for rel in self.relation]
         return []
 
     @property 
@@ -190,12 +185,18 @@ class AnaRelation:
 
 class AnaDataset:
 
-    def __init__(self, fields=None, hashd=None):
-        self.fields = [field if isinstance(field, AnaField) else 
-                       AnaField.id_field[field] for field in fields]
+    def __init__(self, fields=None, relations=None, hashd=None):
+        self.fields = fields
+        self.relations = {field: {} for field in fields}
+        if relations:
+            self.relations |= relations
         self.hashd = hashd
 
-        
+    def set_relations(self, field, dic_relations):
+        for other, dist in dic_relations.items():
+            self.relations[field][other] = AnaRelation([field, other], dist)
+            self.relations[other][field] = AnaRelation([other, field], dist)
+            
 class Util:
 
     @staticmethod 
