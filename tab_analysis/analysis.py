@@ -14,6 +14,7 @@ RATECODEC = 'ratecodec'
 DMINCODEC = 'dmincodec'
 DMAXCODEC = 'dmaxcodec'
 RANCODEC = 'rancodec'
+TYPECODEC = 'typecodec'
 HASHF = 'hashf'
 
 RELATION = 'relation'
@@ -24,6 +25,7 @@ DMIN = 'dmin'
 DIFF = 'diff'
 DRAN = 'dran'
 
+TYPECOUPL = 'typecoupl'
 DISTANCE = 'distance'
 DISTOMIN = 'distomin'
 DISTOMAX = 'distomax'
@@ -45,6 +47,8 @@ class AnaField:
     '''    
    
     def __init__(self, idfield, lencodec, mincodec=None, maxcodec=None, hashf=None):
+        if not isinstance(lencodec, int):
+            raise AnalysisError("lencodec is not correct")
         self.idfield = idfield
         self.lencodec = lencodec
         self.mincodec = mincodec
@@ -66,35 +70,49 @@ class AnaField:
             dic[IDFIELD] = self.idfield
         if full:
             dic |= {RATECODEC: self.ratecodec, DMINCODEC: self.dmincodec,
-                    DMAXCODEC: self.dmaxcodec, RANCODEC: self.rancodec}
+                    DMAXCODEC: self.dmaxcodec, RANCODEC: self.rancodec,
+                    TYPECODEC: self.typecodec}
         if notnone:
             return Util.reduce_dic(dic)
         return dic
-        
+
+    @property
+    def iscomplete(self):
+        return not self.maxcodec is None and not self.mincodec is None
+    
     @property
     def ratecodec(self):
-        if (self.maxcodec and self.mincodec and self.lencodec and 
-            self.maxcodec - self.mincodec):
+        if self.iscomplete and self.maxcodec - self.mincodec:
             return (self.maxcodec - self.lencodec) / (self.maxcodec - self.mincodec)
         return None
 
     @property
     def dmincodec(self):
-        if self.mincodec and self.lencodec:
-            return self.lencodec - self.mincodec
-        return None
+        return self.lencodec - self.mincodec if self.iscomplete else None
     
     @property
     def dmaxcodec(self):
-        if self.maxcodec and self.lencodec:
-            return self.maxcodec - self.lencodec
-        return None
+        return self.maxcodec - self.lencodec if self.iscomplete else None
     
     @property
     def rancodec(self):
-        if self.maxcodec and self.mincodec:
-            return self.maxcodec - self.mincodec
-        return None
+        return self.maxcodec - self.mincodec if self.iscomplete else None
+
+    @property
+    def typecodec(self):
+        if self.maxcodec is None or self.mincodec is None:
+            return None
+        if self.maxcodec == 0:
+            return 'null'
+        if self.lencodec == 1:
+            return 'unique'
+        if self.mincodec == self.maxcodec:
+            return 'complete'
+        if self.lencodec == self.maxcodec:
+            return 'full'
+        if self.lencodec == self.mincodec:
+            return 'default'
+        return 'mixed'        
     
 class AnaRelation:
     '''This class analyses relationships included in a tabular object 
@@ -130,6 +148,7 @@ class AnaRelation:
         dic = {DIST: self.dist, HASHR: self.hashr}
         if relation or full:
             dic[RELATION] = self.id_relation
+            dic[TYPECOUPL] = self.typecoupl
         if distance or full:
             dic |= {DISTANCE: self.distance, DISTOMIN: self.distomin,
                     DISTOMAX: self.distomax, RATECPL: self.ratecpl,
@@ -183,6 +202,16 @@ class AnaRelation:
     def rateder(self):
         return self.distomin / self.dran
 
+    @property
+    def typecoupl(self):
+        if self.distance == 0:
+            return 'coupled'
+        if self.distomin == 0:
+            return 'derived'
+        if self.distomax == 0:
+            return 'crossed'
+        return 'linked'
+    
 class AnaDataset:
 
     def __init__(self, fields=None, relations=None, hashd=None):
@@ -201,4 +230,8 @@ class Util:
 
     @staticmethod 
     def reduce_dic(dic):
-        return {key: val for key, val in dic.items() if val}    
+        return {key: val for key, val in dic.items() if not val is None}    
+
+class AnalysisError(Exception):
+    ''' Analysis Exception'''
+    # pass
