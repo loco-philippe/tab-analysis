@@ -4,7 +4,21 @@ Created on Thu Oct 12 14:49:34 2023
 
 @author: philippe@loco-labs.io
 """
+import copy
 import json
+
+NULL = 'null'
+UNIQUE = 'unique'
+COMPLETE = 'complete'
+FULL = 'full'
+DEFAULT = 'default'
+MIXED = 'mixed'
+
+COUPLED = 'coupled'
+DERIVED = 'derived'
+LINKED = 'linked'
+CROSSED = 'crossed'
+ROUTED = 'routed'
 
 IDFIELD = 'id'
 MINCODEC = 'mincodec'
@@ -60,6 +74,18 @@ class AnaField:
         rep = IDFIELD + ': ' + str(self.idfield) + '\n' + '    ' 
         return rep + json.dumps(self.to_dict())
     
+    def __eq__(self, other):
+        ''' equal if class and values are equal'''
+        return self.__class__ .__name__ == other.__class__.__name__ and \
+            self.idfield == other.idfield and self.lencodec == other.lencodec and \
+            self.mincodec == other.mincodec and self.maxcodec == other.maxcodec and \
+            self.hashf == other.hashf
+
+    def __hash__(self):
+        '''return hash(values)'''
+        return hash(self.idfield) + hash(self.lencodec) + hash(self.mincodec) \
+             + hash(self.maxcodec) + hash(self.hashf) 
+    
     def __str__(self):
         return json.dumps(self.to_dict(idfield=True))
 
@@ -103,16 +129,16 @@ class AnaField:
         if self.maxcodec is None or self.mincodec is None:
             return None
         if self.maxcodec == 0:
-            return 'null'
+            return NULL
         if self.lencodec == 1:
-            return 'unique'
+            return UNIQUE
         if self.mincodec == self.maxcodec:
-            return 'complete'
+            return COMPLETE
         if self.lencodec == self.maxcodec:
-            return 'full'
+            return FULL
         if self.lencodec == self.mincodec:
-            return 'default'
-        return 'mixed'        
+            return DEFAULT
+        return MIXED        
     
 class AnaRelation:
     '''This class analyses relationships included in a tabular object 
@@ -205,26 +231,60 @@ class AnaRelation:
     @property
     def typecoupl(self):
         if self.distance == 0:
-            return 'coupled'
+            return COUPLED
         if self.distomin == 0:
-            return 'derived'
+            return DERIVED
         if self.distomax == 0:
-            return 'crossed'
-        return 'linked'
+            return CROSSED
+        return LINKED
     
+class AnaDfield(AnaField):
+
+    def __new__(cls, other, dataset):
+        if isinstance(other, AnaField):
+            new = copy.copy(other)
+            new.__class__ = AnaDfield
+            return new
+        return object.__new__(cls)
+
+    def __init__(self, other, dataset):
+        self.dataset = dataset   
+    
+    @property 
+    def index(self):
+        return self.dataset.fields.index(self)
+        
+    @property 
+    def fields(self):
+        return self.dataset.fields
+    
+    @property 
+    def relations(self):
+        return self.dataset.relations[self]
+    
+    @property 
+    def category(self):
+        if self.typecodec == UNIQUE:
+            return UNIQUE 
+        if self.typecodec in (COMPLETE, FULL):
+            return ROOTED
+        
+        
 class AnaDataset:
 
     def __init__(self, fields=None, relations=None, hashd=None):
-        self.fields = fields
-        self.relations = {field: {} for field in fields}
+        self.fields = None if not fields else [AnaDfield(field, self) for field in fields]
+        self.relations = {field: {} for field in self.fields}
         if relations:
             self.relations |= relations
         self.hashd = hashd
 
     def set_relations(self, field, dic_relations):
+        fld = field if isinstance(field, AnaDfield) else AnaDfield(field, self)
         for other, dist in dic_relations.items():
-            self.relations[field][other] = AnaRelation([field, other], dist)
-            self.relations[other][field] = AnaRelation([other, field], dist)
+            oth = other if isinstance(other, AnaDfield) else AnaDfield(other, self)
+            self.relations[fld][oth] = AnaRelation([fld, oth], dist)
+            self.relations[oth][fld] = AnaRelation([oth, fld], dist)
             
 class Util:
 

@@ -6,7 +6,7 @@ Created on Thu Oct 12 23:06:12 2023
 """
 import unittest
 from pprint import pprint
-from tab_analysis import AnaField, AnaRelation, AnaDataset
+from tab_analysis import AnaField, AnaRelation, AnaDataset, AnaDfield
 
 """
 il = Dataset.ntv([[1, 2, 3, 4, 5, 6], 
@@ -109,8 +109,10 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
                           'distance': 1, 'distomin': 0, 'distomax': 3, 'ratecpl': 0.25, 'rateder': 0.0,
                           'dmax': 6, 'dmin': 3, 'diff': 1, 'dran': 3})
         #print(dts.relations[fld1][fld2], dts.relations[fld2][fld1])
-        self.assertTrue(dts.relations[i1][i2].dist == dts.relations[i2][i1].dist == 3)
-        self.assertTrue(dts.relations[i1][i3].dist == dts.relations[i3][i1].dist == 6)
+        self.assertTrue(dts.relations[AnaDfield(i1, dts)][AnaDfield(i2, dts)].dist == 
+                        dts.relations[AnaDfield(i2, dts)][AnaDfield(i1, dts)].dist == 3)
+        self.assertTrue(dts.relations[AnaDfield(i1, dts)][AnaDfield(i3, dts)].dist == 
+                        dts.relations[AnaDfield(i3, dts)][AnaDfield(i1, dts)].dist == 6)
         
 if __name__ == '__main__':
     
