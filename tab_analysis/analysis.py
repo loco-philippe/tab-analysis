@@ -18,7 +18,8 @@ COUPLED = 'coupled'
 DERIVED = 'derived'
 LINKED = 'linked'
 CROSSED = 'crossed'
-ROUTED = 'routed'
+ROOTED = 'rooted'
+CORE = 'core'
 
 IDFIELD = 'id'
 MINCODEC = 'mincodec'
@@ -259,8 +260,8 @@ class AnaDfield(AnaField):
         return self.dataset.fields
     
     @property 
-    def relations(self):
-        return self.dataset.relations[self]
+    def list_relations(self):
+        return list(self.dataset.relations[self].values())
     
     @property 
     def category(self):
@@ -268,8 +269,15 @@ class AnaDfield(AnaField):
             return UNIQUE 
         if self.typecodec in (COMPLETE, FULL):
             return ROOTED
-        
-        
+        if COUPLED in [rel.typecoupl for rel in self.list_relations 
+                       if rel.relation[1].index < self.index]:
+            return COUPLED
+        return CORE
+
+    @property 
+    def der_parent(self):
+        pass
+    
 class AnaDataset:
 
     def __init__(self, fields=None, relations=None, hashd=None):
