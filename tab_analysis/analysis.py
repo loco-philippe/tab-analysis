@@ -19,7 +19,7 @@ DERIVED = 'derived'
 LINKED = 'linked'
 CROSSED = 'crossed'
 ROOTED = 'rooted'
-CORE = 'core'
+ROOTDERIVED = 'root derived'
 
 IDFIELD = 'id'
 MINCODEC = 'mincodec'
@@ -272,7 +272,14 @@ class AnaDfield(AnaField):
         if COUPLED in [rel.typecoupl for rel in self.list_relations 
                        if rel.relation[1].index < self.index]:
             return COUPLED
-        return CORE
+        if not [rel for rel in self.list_relations if rel.typecoupl == DERIVED
+                       and rel.relation[1].lencodec < self.lencodec           
+                       and not rel.relation[1].typecodec in (COMPLETE, FULL)]:
+            return DERIVED
+        if not [rel for rel in self.list_relations if rel.typecoupl == DERIVED
+                       and rel.relation[1].lencodec < self.lencodec]:
+            return ROOTDERIVED
+        return MIXED
 
     @property 
     def der_parent(self):
