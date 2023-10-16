@@ -311,11 +311,12 @@ class AnaDfield(AnaField):
                 if rel.relation[1].category == ROOTED:
                     return self.dataset.root
                 if rel.relation[1].category in (MIXED, ROOTDERIVED):
-                    """if rel.relation[1] == self:
-                    return self.dataset.root"""
                     return rel.relation[1]
         return 'erreur'
-    
+
+    @property 
+    def p_distance(self):
+        
 class AnaDataset:
 
     def __init__(self, fields=None, relations=None, hashd=None):
