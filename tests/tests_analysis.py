@@ -7,7 +7,7 @@ Created on Thu Oct 12 23:06:12 2023
 import unittest
 from pprint import pprint
 from tab_analysis import AnaField, AnaRelation, AnaDataset, AnaDfield
-
+from tab_analysis import ROOTED, ROOTDERIVED, DERIVED, COUPLED
 """
 il = Dataset.ntv([[1, 2, 3, 4, 5, 6], 
                   ['a', 'b', 'b', 'c', 'c', 'a'],
@@ -62,32 +62,19 @@ i0 = AnaField('i0', 6, 6, 6)
 i1 = AnaField('i1', 3, 3, 6)
 i2 = AnaField('i2', 2, 2, 6)
 i3 = AnaField('i3', 2, 2, 6)
-
-i0i0 = AnaRelation([i0, i0], 6)
-i0i1 = AnaRelation([i0, i1], 6)
-i0i2 = AnaRelation([i0, i2], 6)
-i0i3 = AnaRelation([i0, i3], 6)
-
-i1i0 = AnaRelation([i1, i0], 6)
-i1i1 = AnaRelation([i1, i1], 3)
-i1i2 = AnaRelation([i1, i2], 3)
-i1i3 = AnaRelation([i1, i3], 6)
+i4 = AnaField('i4', 2, 2, 6)
 
 i2i0 = AnaRelation([i2, i0], 6)
 i2i1 = AnaRelation([i2, i1], 3)
 i2i2 = AnaRelation([i2, i2], 2)
 i2i3 = AnaRelation([i2, i3], 4)
 
-i3i0 = AnaRelation([i3, i0], 6)
-i3i1 = AnaRelation([i3, i1], 6)
-i3i2 = AnaRelation([i3, i2], 4)
-i3i3 = AnaRelation([i3, i3], 2)
-
-dts = AnaDataset([i0, i1, i2, i3])   
-dts.set_relations(i0, {i1: 6, i2: 6, i3: 6})
-dts.set_relations(i1, {i0: 6, i2: 3, i3: 6})
-dts.set_relations(i2, {i0: 6, i1: 3, i3: 4})
-dts.set_relations(i3, {i0: 6, i1: 6, i2: 4})
+dts = AnaDataset([i0, i1, i2, i3, i4])   
+dts.set_relations(i0, {i1: 6, i2: 6, i3: 6, i4: 6})
+dts.set_relations(i1, {i0: 6, i2: 3, i3: 6, i4: 6})
+dts.set_relations(i2, {i0: 6, i1: 3, i3: 4, i4: 4})
+dts.set_relations(i3, {i0: 6, i1: 6, i2: 4, i4: 2})
+dts.set_relations(i4, {i0: 6, i1: 6, i2: 4, i3: 2})
 
 class Test_AnaField_AnaRelation(unittest.TestCase):
     
@@ -113,7 +100,10 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
                         dts.relations[AnaDfield(i2, dts)][AnaDfield(i1, dts)].dist == 3)
         self.assertTrue(dts.relations[AnaDfield(i1, dts)][AnaDfield(i3, dts)].dist == 
                         dts.relations[AnaDfield(i3, dts)][AnaDfield(i1, dts)].dist == 6)
-        
+
+    def test_field_typology(self):
+        self.assertEqual([fld.category for fld in dts.fields], 
+                         [ROOTED, ROOTDERIVED, DERIVED, ROOTDERIVED, COUPLED])
 if __name__ == '__main__':
     
     unittest.main(verbosity=2)

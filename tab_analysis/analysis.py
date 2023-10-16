@@ -20,6 +20,7 @@ LINKED = 'linked'
 CROSSED = 'crossed'
 ROOTED = 'rooted'
 ROOTDERIVED = 'root derived'
+ROOT = 'root'
 
 IDFIELD = 'id'
 MINCODEC = 'mincodec'
@@ -70,7 +71,10 @@ class AnaField:
         self.maxcodec = maxcodec
         self.hashf = hashf
         #AnaField.id_field[idfield] = self
-
+    
+    def __len__(self):
+        return self.maxcodec if self.maxcodec else self.lencodec
+    
     def __repr__(self):
         rep = IDFIELD + ': ' + str(self.idfield) + '\n' + '    ' 
         return rep + json.dumps(self.to_dict())
@@ -250,6 +254,9 @@ class AnaDfield(AnaField):
 
     def __init__(self, other, dataset):
         self.dataset = dataset   
+
+    def __repr__(self):
+        return 'Field : ' + str(self.idfield)
     
     @property 
     def index(self):
@@ -262,7 +269,19 @@ class AnaDfield(AnaField):
     @property 
     def list_relations(self):
         return list(self.dataset.relations[self].values())
-    
+
+    @property 
+    def list_p_derived(self):
+        return [rel for rel in self.list_relations if rel.typecoupl == DERIVED
+                       and rel.relation[1].lencodec > self.lencodec]
+    @property 
+    def list_c_derived(self):
+        return [rel for rel in self.list_relations if rel.typecoupl == DERIVED
+                       and rel.relation[1].lencodec < self.lencodec]
+    @property 
+    def list_coupled(self):
+        return [rel for rel in self.list_relations if rel.typecoupl == COUPLED]
+
     @property 
     def category(self):
         if self.typecodec == UNIQUE:
@@ -272,18 +291,28 @@ class AnaDfield(AnaField):
         if COUPLED in [rel.typecoupl for rel in self.list_relations 
                        if rel.relation[1].index < self.index]:
             return COUPLED
-        if not [rel for rel in self.list_relations if rel.typecoupl == DERIVED
-                       and rel.relation[1].lencodec < self.lencodec           
-                       and not rel.relation[1].typecodec in (COMPLETE, FULL)]:
-            return DERIVED
-        if not [rel for rel in self.list_relations if rel.typecoupl == DERIVED
-                       and rel.relation[1].lencodec < self.lencodec]:
+        if not [rel for rel in self.list_p_derived if
+                not rel.relation[1].typecodec in (COMPLETE, FULL)]:
             return ROOTDERIVED
+        if not self.list_c_derived: 
+            return DERIVED
         return MIXED
 
     @property 
-    def der_parent(self):
-        pass
+    def p_derived(self):
+        if self.category in (UNIQUE, ROOTED, ROOTDERIVED):
+            return self.dataset.root
+        if self.category == COUPLED:
+            return [rel.relation[1] for rel in self.list_coupled 
+                    if not rel.relation[1].category == COUPLED][0]
+        distance_min = min([rel.distance for rel in self.list_p_derived])
+        for rel in self.list_p_derived:
+            if (rel.distance == distance_min and 
+                rel.relation[1].category in (MIXED, ROOTDERIVED)):
+                if rel.relation[1] == self:
+                    return self.dataset.root
+                return rel.relation[1]
+        return 'erreur'
     
 class AnaDataset:
 
@@ -294,12 +323,20 @@ class AnaDataset:
             self.relations |= relations
         self.hashd = hashd
 
+    def __len__(self):
+        return max([len(fld) for fld in self.fields])
+    
     def set_relations(self, field, dic_relations):
         fld = field if isinstance(field, AnaDfield) else AnaDfield(field, self)
         for other, dist in dic_relations.items():
             oth = other if isinstance(other, AnaDfield) else AnaDfield(other, self)
             self.relations[fld][oth] = AnaRelation([fld, oth], dist)
             self.relations[oth][fld] = AnaRelation([oth, fld], dist)
+
+    @property 
+    def root(self):
+        len_self = len(self)
+        return AnaDfield(AnaField(ROOT, len_self, len_self, len_self), self)
             
 class Util:
 
