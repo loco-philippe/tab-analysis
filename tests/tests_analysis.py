@@ -7,12 +7,14 @@ Created on Thu Oct 12 23:06:12 2023
 import unittest
 from pprint import pprint
 from tab_analysis import AnaField, AnaRelation, AnaDataset, AnaDfield
-from tab_analysis import ROOTED, ROOTDERIVED, DERIVED, COUPLED
+from tab_analysis import ROOT, ROOTED, ROOTDERIVED, DERIVED, COUPLED
+from tab_analysis import NULL, UNIQUE, COMPLETE, FULL, DEFAULT, MIXED
+
 """
-il = Dataset.ntv([[1, 2, 3, 4, 5, 6], 
-                  ['a', 'b', 'b', 'c', 'c', 'a'],
-                  [20, 10, 10, 10, 10, 20], 
-                  [200, 200, 300, 200, 300, 300]])
+il = Dataset.ntv([[1, 2, 3, 4, 5, 6],               root coupled
+                  ['a', 'b', 'b', 'c', 'c', 'a'],   mixed
+                  [20, 10, 10, 10, 10, 20],         derived from 1
+                  [200, 200, 300, 200, 300, 300]])  derived from root
 il.lindex[0].infos
 {'lencodec': 6, 'mincodec': 6, 'maxcodec': 6, 'typecodec': 'complete', 'ratecodec': 0.0}
 il.lindex[1].infos
@@ -103,7 +105,13 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
 
     def test_field_typology(self):
         self.assertEqual([fld.category for fld in dts.fields], 
-                         [ROOTED, ROOTDERIVED, DERIVED, ROOTDERIVED, COUPLED])
+                         #[ROOTED, ROOTDERIVED, DERIVED, ROOTDERIVED, COUPLED])
+                         [ROOTED, MIXED, DERIVED, DERIVED, COUPLED])
+        self.assertEqual([fld.p_derived.idfield for fld in dts.fields], 
+                         [ROOT, ROOT, 'i1', ROOT, 'i3'])
+        self.assertEqual([fld.typecodec for fld in dts.fields], 
+                         [COMPLETE, DEFAULT, DEFAULT, DEFAULT, DEFAULT])
+
 if __name__ == '__main__':
     
     unittest.main(verbosity=2)

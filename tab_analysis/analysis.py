@@ -291,9 +291,9 @@ class AnaDfield(AnaField):
         if COUPLED in [rel.typecoupl for rel in self.list_relations 
                        if rel.relation[1].index < self.index]:
             return COUPLED
-        if not [rel for rel in self.list_p_derived if
+        '''if not [rel for rel in self.list_p_derived if
                 not rel.relation[1].typecodec in (COMPLETE, FULL)]:
-            return ROOTDERIVED
+            return ROOTDERIVED'''
         if not self.list_c_derived: 
             return DERIVED
         return MIXED
@@ -307,11 +307,13 @@ class AnaDfield(AnaField):
                     if not rel.relation[1].category == COUPLED][0]
         distance_min = min([rel.distance for rel in self.list_p_derived])
         for rel in self.list_p_derived:
-            if (rel.distance == distance_min and 
-                rel.relation[1].category in (MIXED, ROOTDERIVED)):
-                if rel.relation[1] == self:
+            if (rel.distance == distance_min):
+                if rel.relation[1].category == ROOTED:
                     return self.dataset.root
-                return rel.relation[1]
+                if rel.relation[1].category in (MIXED, ROOTDERIVED):
+                    """if rel.relation[1] == self:
+                    return self.dataset.root"""
+                    return rel.relation[1]
         return 'erreur'
     
 class AnaDataset:
