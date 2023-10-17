@@ -84,11 +84,8 @@ dic =   {'name': 'test', 'length': 5,
             {'name': 'i1', 'lencodec': 3, 'mincodec': 3 },
             {'name': 'i2', 'lencodec': 2, 'mincodec': 2 }
             ],
-         'relations': [
-            {'relation': ['i0', 'i1'], 'dist': 6},
-            {'relation': ['i0', 'i2'], 'dist': 6},
-            {'relation': ['i1', 'i2'], 'dist': 3},
-            ]
+         'relations': {'i0': {'i1': 6, 'i2': 6}, 
+                       'i1': {'i2': 3}}
         }
 class Test_AnaField_AnaRelation(unittest.TestCase):
     

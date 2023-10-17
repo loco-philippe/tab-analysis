@@ -48,6 +48,11 @@ DISTOMAX = 'distomax'
 RATECPL  = 'ratecpl'
 RATEDER  = 'rateder'
 
+IDDATASET = 'iddataset'
+RELATIONS = 'relations'
+FIELDS = 'fields'
+LENGTH = 'length'
+
 class AnaField:
     '''This class analyses relationships included in a tabular object 
     (Pandas DataFrame, Dataset, Observation, list of list).
@@ -71,6 +76,12 @@ class AnaField:
         self.maxcodec = maxcodec
         self.hashf = hashf
         #AnaField.id_field[idfield] = self
+        if isinstance(idfield, dict):
+            self.idfield = idfield.get(IDFIELD, None)
+            self.lencodec = idfield.get(LENCODEC, None)
+            self.mincodec = idfield.get(MINCODEC, None)
+            self.maxcodec = idfield.get(MAXCODEC, None)
+            self.hashf = idfield.get(HASHF, None)
     
     def __len__(self):
         return self.maxcodec if self.maxcodec else self.lencodec
@@ -94,6 +105,10 @@ class AnaField:
     def __str__(self):
         return json.dumps(self.to_dict(idfield=True))
 
+    @classmethod 
+    def from_dic(cls, fld, length):
+        return cls(fld | {MAXCODEC: length})
+    
     def to_dict(self, full=False, idfield=False, notnone=True):
         dic = {LENCODEC: self.lencodec, MINCODEC: self.mincodec, 
                MAXCODEC: self.maxcodec, HASHF: self.hashf}
@@ -258,6 +273,10 @@ class AnaDfield(AnaField):
     def __repr__(self):
         return 'Field : ' + str(self.idfield)
     
+    @classmethod 
+    def from_dic(cls, fld, dts, length):
+        return cls(AnaField.from_dic(fld, length), dts)
+    
     @property 
     def index(self):
         return self.dataset.fields.index(self)
@@ -335,7 +354,8 @@ class AnaDfield(AnaField):
         
 class AnaDataset:
 
-    def __init__(self, fields=None, relations=None, hashd=None):
+    def __init__(self, fields=None, relations=None, iddataset=None, hashd=None):
+        self.iddataset = iddataset
         self.fields = None if not fields else [AnaDfield(field, self) for field in fields]
         self.relations = {field: {} for field in self.fields}
         if relations:
@@ -344,6 +364,17 @@ class AnaDataset:
 
     def __len__(self):
         return max([len(fld) for fld in self.fields])
+
+    @staticmethod 
+    def from_dic(dic):
+        iddataset = dic.get(IDDATASET, None)
+        length = dic.get(LENGTH, None)
+        fields = [AnaDfield.from_dic(fld, self, length) for fld in dic[FIELDS]]   
+        length = length if length else max([len(fld) for fld in fields])
+        dts = AnaDataset(fields, None, iddataset)
+        for fld1, rel_fld1 in dic[RELATIONS].items():
+            dts.set_relations(dts.ana_field(fld1), rel_fld1)
+        return dts
     
     def set_relations(self, field, dic_relations):
         fld = field if isinstance(field, AnaDfield) else AnaDfield(field, self)
@@ -356,7 +387,10 @@ class AnaDataset:
     def root(self):
         len_self = len(self)
         return AnaDfield(AnaField(ROOT, len_self, len_self, len_self), self)
-            
+
+    def ana_field(self, name):
+        return [fld for fld in self.fields if fld.idfield == name][0]    
+       
 class Util:
 
     @staticmethod 
