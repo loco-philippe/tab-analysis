@@ -78,6 +78,18 @@ dts.set_relations(i2, {i0: 6, i1: 3, i3: 4, i4: 4})
 dts.set_relations(i3, {i0: 6, i1: 6, i2: 4, i4: 2})
 dts.set_relations(i4, {i0: 6, i1: 6, i2: 4, i3: 2})
 
+dic =   {'name': 'test', 'length': 5,
+         'fields': [ 
+            {'name': 'i0', 'lencodec': 6, 'mincodec': 6 },
+            {'name': 'i1', 'lencodec': 3, 'mincodec': 3 },
+            {'name': 'i2', 'lencodec': 2, 'mincodec': 2 }
+            ],
+         'relations': [
+            {'relation': ['i0', 'i1'], 'dist': 6},
+            {'relation': ['i0', 'i2'], 'dist': 6},
+            {'relation': ['i1', 'i2'], 'dist': 3},
+            ]
+        }
 class Test_AnaField_AnaRelation(unittest.TestCase):
     
     def test_creation(self):
