@@ -71,21 +71,25 @@ i2i1 = AnaRelation([i2, i1], 3)
 i2i2 = AnaRelation([i2, i2], 2)
 i2i3 = AnaRelation([i2, i3], 4)
 
-dts = AnaDataset([i0, i1, i2, i3, i4])   
+dts = AnaDataset([i0, i1, i2, i3, i4], iddataset='test')   
 dts.set_relations(i0, {i1: 6, i2: 6, i3: 6, i4: 6})
 dts.set_relations(i1, {i0: 6, i2: 3, i3: 6, i4: 6})
 dts.set_relations(i2, {i0: 6, i1: 3, i3: 4, i4: 4})
 dts.set_relations(i3, {i0: 6, i1: 6, i2: 4, i4: 2})
 dts.set_relations(i4, {i0: 6, i1: 6, i2: 4, i3: 2})
 
-dic =   {'name': 'test', 'length': 5,
+dic =   {'name': 'test', 'length': 6,
          'fields': [ 
-            {'name': 'i0', 'lencodec': 6, 'mincodec': 6 },
-            {'name': 'i1', 'lencodec': 3, 'mincodec': 3 },
-            {'name': 'i2', 'lencodec': 2, 'mincodec': 2 }
+            {'id': 'i0', 'lencodec': 6, 'mincodec': 6 },
+            {'id': 'i1', 'lencodec': 3, 'mincodec': 3 },
+            {'id': 'i2', 'lencodec': 2, 'mincodec': 2 },
+            {'id': 'i3', 'lencodec': 2, 'mincodec': 2 },
+            {'id': 'i4', 'lencodec': 2, 'mincodec': 2 }
             ],
-         'relations': {'i0': {'i1': 6, 'i2': 6}, 
-                       'i1': {'i2': 3}}
+         'relations': {'i0': {'i1': 6, 'i2': 6, 'i3': 6, 'i4': 6}, 
+                       'i1': {'i2': 3, 'i3': 6, 'i4': 6},
+                       'i2': {'i3': 4, 'i4': 4},
+                       'i3': {'i4': 2}}
         }
 class Test_AnaField_AnaRelation(unittest.TestCase):
     
@@ -111,6 +115,7 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
                         dts.relations[AnaDfield(i2, dts)][AnaDfield(i1, dts)].dist == 3)
         self.assertTrue(dts.relations[AnaDfield(i1, dts)][AnaDfield(i3, dts)].dist == 
                         dts.relations[AnaDfield(i3, dts)][AnaDfield(i1, dts)].dist == 6)
+        self.assertEqual(dts, AnaDataset.from_dic(dic))
 
     def test_field_typology(self):
         self.assertEqual([fld.category for fld in dts.fields], 
@@ -122,6 +127,7 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
                          [COMPLETE, DEFAULT, DEFAULT, DEFAULT, DEFAULT])
         self.assertEqual([fld.p_distance for fld in dts.fields], 
                          [dts.root, dts.root, dts.fields[1], dts.fields[2], dts.fields[3]])
+
 
 if __name__ == '__main__':
     

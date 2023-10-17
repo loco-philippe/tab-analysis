@@ -48,7 +48,7 @@ DISTOMAX = 'distomax'
 RATECPL  = 'ratecpl'
 RATEDER  = 'rateder'
 
-IDDATASET = 'iddataset'
+IDDATASET = 'name'
 RELATIONS = 'relations'
 FIELDS = 'fields'
 LENGTH = 'length'
@@ -67,8 +67,23 @@ class AnaField:
     - **iobj** : Dataset or Observation associated to the Analysis object
     '''    
    
-    def __init__(self, idfield, lencodec, mincodec=None, maxcodec=None, hashf=None):
-        if not isinstance(lencodec, int):
+    def __init__(self, idfield, lencodec=None, mincodec=None, maxcodec=None, hashf=None):
+
+        if isinstance(idfield, dict):
+            self.idfield = idfield.get(IDFIELD, None)
+            self.lencodec = idfield.get(LENCODEC, None)
+            self.mincodec = idfield.get(MINCODEC, None)
+            self.maxcodec = idfield.get(MAXCODEC, None)
+            self.hashf = idfield.get(HASHF, None)
+            return
+        if isinstance(idfield, (AnaField, AnaDfield)):
+            self.idfield = idfield.idfield
+            self.lencodec = idfield.lencodec
+            self.mincodec = idfield.mincodec
+            self.maxcodec = idfield.maxcodec
+            self.hashf = idfield.hashf
+            return
+        if not lencodec or not isinstance(lencodec, int):
             raise AnalysisError("lencodec is not correct")
         self.idfield = idfield
         self.lencodec = lencodec
@@ -76,12 +91,7 @@ class AnaField:
         self.maxcodec = maxcodec
         self.hashf = hashf
         #AnaField.id_field[idfield] = self
-        if isinstance(idfield, dict):
-            self.idfield = idfield.get(IDFIELD, None)
-            self.lencodec = idfield.get(LENCODEC, None)
-            self.mincodec = idfield.get(MINCODEC, None)
-            self.maxcodec = idfield.get(MAXCODEC, None)
-            self.hashf = idfield.get(HASHF, None)
+
     
     def __len__(self):
         return self.maxcodec if self.maxcodec else self.lencodec
@@ -105,9 +115,13 @@ class AnaField:
     def __str__(self):
         return json.dumps(self.to_dict(idfield=True))
 
+    def __copy__(self):
+        ''' Copy all the data '''
+        return self.__class__(self)
+    
     @classmethod 
     def from_dic(cls, fld, length):
-        return cls(fld | {MAXCODEC: length})
+        return cls(fld[IDFIELD], fld[LENCODEC], fld.get(MINCODEC, None), length)
     
     def to_dict(self, full=False, idfield=False, notnone=True):
         dic = {LENCODEC: self.lencodec, MINCODEC: self.mincodec, 
@@ -190,6 +204,17 @@ class AnaRelation:
     def __str__(self):
         return json.dumps(self.to_dict(relation=True))
 
+    def __eq__(self, other):
+        ''' equal if class and values are equal'''
+        return self.__class__ .__name__ == other.__class__.__name__ and \
+            self.relation == other.relation and self.dist == other.dist and \
+            self.hashr == other.hashr
+
+    def __hash__(self):
+        '''return hash(values)'''
+        return hash(self.relation[0]) + hash(self.relation[1]) + \
+               hash(self.dist) + hash(self.hashr)
+               
     def to_dict(self, distance=False, full=False, relation=False, notnone=True):
         dic = {DIST: self.dist, HASHR: self.hashr}
         if relation or full:
@@ -262,7 +287,7 @@ class AnaDfield(AnaField):
 
     def __new__(cls, other, dataset):
         if isinstance(other, AnaField):
-            new = copy.copy(other)
+            new = AnaField.__copy__(other)
             new.__class__ = AnaDfield
             return new
         return object.__new__(cls)
@@ -272,10 +297,18 @@ class AnaDfield(AnaField):
 
     def __repr__(self):
         return 'Field : ' + str(self.idfield)
-    
-    @classmethod 
+
+    def __eq__(self, other):
+        ''' equal if class and values are equal'''
+        return super().__eq__(other)
+
+    def __hash__(self):
+        '''return hash(values)'''
+        return super().__hash__()
+             
+    """@classmethod 
     def from_dic(cls, fld, dts, length):
-        return cls(AnaField.from_dic(fld, length), dts)
+        return cls(AnaField.from_dic(fld, length), dts)"""
     
     @property 
     def index(self):
@@ -365,21 +398,34 @@ class AnaDataset:
     def __len__(self):
         return max([len(fld) for fld in self.fields])
 
+    def __eq__(self, other):
+        ''' equal if class and values are equal'''
+        return self.__class__ .__name__ == other.__class__.__name__ and \
+            self.fields == other.fields and self.relations == other.relations and \
+            self.iddataset == other.iddataset and self.hashd == other.hashd
+
+    def __hash__(self):
+        '''return hash(values)'''
+        return hash(self.iddataset) + sum([hash(fld) for fld in self.fields]) + \
+               sum([hash(rel) for rel in self.relations]) + hash(self.hashd)
+             
     @staticmethod 
     def from_dic(dic):
         iddataset = dic.get(IDDATASET, None)
         length = dic.get(LENGTH, None)
-        fields = [AnaDfield.from_dic(fld, self, length) for fld in dic[FIELDS]]   
+        fields = [AnaField.from_dic(fld, length) for fld in dic[FIELDS]]   
         length = length if length else max([len(fld) for fld in fields])
         dts = AnaDataset(fields, None, iddataset)
         for fld1, rel_fld1 in dic[RELATIONS].items():
-            dts.set_relations(dts.ana_field(fld1), rel_fld1)
+            dts.set_relations(dts.ana_dfield(fld1), rel_fld1)
         return dts
     
     def set_relations(self, field, dic_relations):
-        fld = field if isinstance(field, AnaDfield) else AnaDfield(field, self)
+        fld = field if not isinstance(field, str) else self.ana_dfield(field)
+        fld = fld if isinstance(fld, AnaDfield) else AnaDfield(fld, self)
         for other, dist in dic_relations.items():
-            oth = other if isinstance(other, AnaDfield) else AnaDfield(other, self)
+            oth = other if not isinstance(other, str) else self.ana_dfield(other)
+            oth = oth if isinstance(oth, AnaDfield) else AnaDfield(oth, self)
             self.relations[fld][oth] = AnaRelation([fld, oth], dist)
             self.relations[oth][fld] = AnaRelation([oth, fld], dist)
 
@@ -388,7 +434,7 @@ class AnaDataset:
         len_self = len(self)
         return AnaDfield(AnaField(ROOT, len_self, len_self, len_self), self)
 
-    def ana_field(self, name):
+    def ana_dfield(self, name):
         return [fld for fld in self.fields if fld.idfield == name][0]    
        
 class Util:
