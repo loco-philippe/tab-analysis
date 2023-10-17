@@ -111,6 +111,8 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
                          [ROOT, ROOT, 'i1', ROOT, 'i3'])
         self.assertEqual([fld.typecodec for fld in dts.fields], 
                          [COMPLETE, DEFAULT, DEFAULT, DEFAULT, DEFAULT])
+        self.assertEqual([fld.p_distance for fld in dts.fields], 
+                         [dts.root, dts.root, dts.fields[1], dts.fields[2], dts.fields[3]])
 
 if __name__ == '__main__':
     

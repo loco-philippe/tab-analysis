@@ -283,6 +283,10 @@ class AnaDfield(AnaField):
         return [rel for rel in self.list_relations if rel.typecoupl == COUPLED]
 
     @property 
+    def dist_root(self):
+        return len(self.dataset) - self.lencodec
+
+    @property 
     def category(self):
         if self.typecodec == UNIQUE:
             return UNIQUE 
@@ -316,6 +320,18 @@ class AnaDfield(AnaField):
 
     @property 
     def p_distance(self):
+        if self.category in (UNIQUE, ROOTED, COUPLED):
+            return self.p_derived
+        dist_up = [rel.distance for rel in self.list_relations
+                   if rel.relation[1].lencodec >= self.lencodec 
+                   and rel.relation[1].category != COUPLED]
+        if not dist_up or min(dist_up) == self.dist_root:
+            return self.dataset.root
+        distance_min = min(dist_up) 
+        list_dmin = [rel.relation[1] for rel in self.list_relations
+                     if rel.distance == distance_min]
+        max_lencodec = max([fld.lencodec for fld in list_dmin])
+        return [fld for fld in list_dmin if fld.lencodec == max_lencodec][0]
         
 class AnaDataset:
 
