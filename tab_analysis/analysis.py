@@ -190,10 +190,6 @@ class AnaRelation:
     
     def __init__(self, relation, dist, hashr=None):
         self.relation = relation
-        #if isinstance(relation, (list, tuple)) and len(relation) == 2:
-            #self.relation = relation 
-            #self.relation = [rel if isinstance(rel, AnaField) else 
-            #    AnaField.id_field[rel] for rel in relation]
         self.dist = dist
         self.hashr = hashr
 
@@ -285,7 +281,10 @@ class AnaRelation:
     
 class AnaDfield(AnaField):
 
-    def __new__(cls, other, dataset):
+    def __new__(cls, other, dataset=None):
+        if isinstance(other, AnaDfield):
+            new = AnaDfield.__copy__(other)
+            return new
         if isinstance(other, AnaField):
             new = AnaField.__copy__(other)
             new.__class__ = AnaDfield
@@ -305,6 +304,11 @@ class AnaDfield(AnaField):
     def __hash__(self):
         '''return hash(values)'''
         return super().__hash__()
+
+    def __copy__(self):
+        ''' Copy all the data '''
+        return self.__class__(AnaField(self), self.dataset)
+    
              
     """@classmethod 
     def from_dic(cls, fld, dts, length):
@@ -384,6 +388,35 @@ class AnaDfield(AnaField):
                      if rel.distance == distance_min]
         max_lencodec = max([fld.lencodec for fld in list_dmin])
         return [fld for fld in list_dmin if fld.lencodec == max_lencodec][0]
+
+    def list_parents(self, typeparent='derived'):
+        parent = self
+        listparent = []
+        while parent != self.dataset.root:
+            parent = parent.p_derived if typeparent == 'derived' else parent.p_distance
+            if parent != self.dataset.root:
+                listparent.append(parent)
+        return listparent
+
+    def dic_noeud(self, n, mode): # child, lname, mode):
+        '''generate a dict with nodes data '''
+        if self == self.dataset.root:
+            lis = ['root-' + mode + '*(' + str(self.dmaxcodec) + ')']
+        else:
+            adding = ''
+            if mode == 'distance':
+                adding = str(self.dataset.get_relation(self, self.p_distance).distance) + ' - '
+            '''elif mode == 'diff':
+                adding = str(format(self.infos[n]['rateder'], '.2e')) + ' - '''
+            adding += str(self.lencodec)
+            name = self.idfield + ' (' + adding + ')'
+            lis = [name.replace(' ', '*').replace("'", '*')]
+        """if child[n+1]:
+            for ch in child[n+1]:
+                if ch != n:
+                    lis.append(self._dic_noeud(ch, child, lname, mode))
+        """
+        return {str(n).ljust(2, '*'): lis}
         
 class AnaDataset:
 
@@ -417,26 +450,50 @@ class AnaDataset:
         length = length if length else max([len(fld) for fld in fields])
         dts = AnaDataset(fields, None, iddataset)
         for fld1, rel_fld1 in dic[RELATIONS].items():
-            dts.set_relations(dts.ana_dfield(fld1), rel_fld1)
+            dts.set_relations(dts.dfield(fld1), rel_fld1)
         return dts
     
     def set_relations(self, field, dic_relations):
-        fld = field if not isinstance(field, str) else self.ana_dfield(field)
-        fld = fld if isinstance(fld, AnaDfield) else AnaDfield(fld, self)
+        fld = self.dfield(field)
         for other, dist in dic_relations.items():
-            oth = other if not isinstance(other, str) else self.ana_dfield(other)
-            oth = oth if isinstance(oth, AnaDfield) else AnaDfield(oth, self)
+            oth = self.dfield(other)
             self.relations[fld][oth] = AnaRelation([fld, oth], dist)
             self.relations[oth][fld] = AnaRelation([oth, fld], dist)
 
+    def get_relation(self, fld1, fld2):
+        if self.dfield(fld1) == self.root:
+            return AnaRelation([]) #!!! 
+        return self.relations[self.dfield(fld1)][self.dfield(fld2)]
+    
     @property 
     def root(self):
         len_self = len(self)
         return AnaDfield(AnaField(ROOT, len_self, len_self, len_self), self)
 
-    def ana_dfield(self, name):
-        return [fld for fld in self.fields if fld.idfield == name][0]    
-       
+    def dfield(self, fld):
+        if isinstance(fld, str):
+            return [dfld for dfld in self.fields if dfld.idfield == fld][0]    
+        return AnaDfield(fld, self)
+    
+    def _dic_noeud(self, n, child, lname, mode):
+        '''generate a dict with nodes data defined by 'child' '''
+        if n == -1:
+            lis = ['root-' + mode + '*(' + str(len(self.iobj)) + ')']
+        else:
+            adding = ''
+            if mode == 'distance':
+                adding = str(self.infos[n]['distance']) + ' - '
+            elif mode == 'diff':
+                adding = str(format(self.infos[n]['rateder'], '.2e')) + ' - '
+            adding += str(self.infos[n]['lencodec'])
+            name = self.infos[n]['name'] + ' (' + adding + ')'
+            lis = [name.replace(' ', '*').replace("'", '*')]
+        if child[n+1]:
+            for ch in child[n+1]:
+                if ch != n:
+                    lis.append(self._dic_noeud(ch, child, lname, mode))
+        return {str(n).ljust(2, '*'): lis}
+    
 class Util:
 
     @staticmethod 

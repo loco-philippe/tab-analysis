@@ -117,6 +117,11 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
                         dts.relations[AnaDfield(i3, dts)][AnaDfield(i1, dts)].dist == 6)
         self.assertEqual(dts, AnaDataset.from_dic(dic))
 
+    def test_casting(self):
+        self.assertTrue(dts.dfield(dts.fields[0]) ==
+                        dts.dfield(AnaField(dts.fields[0])) ==
+                        dts.dfield('i0'))
+        
     def test_field_typology(self):
         self.assertEqual([fld.category for fld in dts.fields], 
                          #[ROOTED, ROOTDERIVED, DERIVED, ROOTDERIVED, COUPLED])
@@ -127,6 +132,11 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
                          [COMPLETE, DEFAULT, DEFAULT, DEFAULT, DEFAULT])
         self.assertEqual([fld.p_distance for fld in dts.fields], 
                          [dts.root, dts.root, dts.fields[1], dts.fields[2], dts.fields[3]])
+        self.assertEqual([fld.list_parents() for fld in dts.fields], 
+                         [[], [], [dts.fields[1]], [], [dts.fields[3]]])
+        self.assertEqual([fld.list_parents('distance') for fld in dts.fields], 
+                         [[], [], [dts.fields[1]], [dts.fields[2], dts.fields[1]],
+                          [dts.fields[3], dts.fields[2], dts.fields[1]]])
 
 
 if __name__ == '__main__':
