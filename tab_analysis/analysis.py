@@ -6,6 +6,7 @@ Created on Thu Oct 12 14:49:34 2023
 """
 import copy
 import json
+import pprint
 
 NULL = 'null'
 UNIQUE = 'unique'
@@ -398,28 +399,43 @@ class AnaDfield(AnaField):
                 listparent.append(parent)
         return listparent
 
-    def dic_noeud(self, mode): # child, lname, mode):
+    def dic_noeud(self, mode, lname): # child, lname, mode):
         '''generate a dict with nodes data '''
         if self == self.dataset.root:
             lis = ['root-' + mode + '*(' + str(self.lencodec) + ')']
+            if mode == 'distance':
+                childs = [fld for fld in self.fields 
+                          if fld.p_distance == self.dataset.root]
+            elif mode == 'derived':
+                childs = [fld for fld in self.fields 
+                          if fld.p_derived == self.dataset.root]
+            for fld in childs:
+                lis.append(fld.dic_noeud(mode, lname))
             return {str(-1).ljust(2, '*'): lis}
         adding = ''
         if mode == 'distance':
             rel_parent = self.dataset.get_relation(self, self.p_distance)
             adding = str(rel_parent.distance) + ' - '
+        elif mode == 'derived':
+            rel_parent = self.dataset.get_relation(self, self.p_derived)
+            adding = str(rel_parent.distance) + ' - '            
         adding += str(self.lencodec)
-        name = self.idfield + ' (' + adding + ')'
+        name = self.idfield[:lname] + ' (' + adding + ')'
         lis = [name.replace(' ', '*').replace("'", '*')]
         if self.category != COUPLED:
             for rel in self.list_coupled:
-                lis.append(rel.relation[1].dic_noeud(mode))            
+                lis.append(rel.relation[1].dic_noeud(mode, lname))            
         if not self.category in (ROOTED, UNIQUE):
             if mode == 'distance':
                 childs = [rel.relation[1] for rel in self.list_relations 
                           if rel.relation[1].p_distance == self and 
                              rel.relation[1].category != COUPLED]
+            elif mode == 'derived':
+                childs = [rel.relation[1] for rel in self.list_relations 
+                          if rel.relation[1].p_derived == self and 
+                             rel.relation[1].category != COUPLED]
             for fld in childs:
-                lis.append(fld.dic_noeud(mode))            
+                lis.append(fld.dic_noeud(mode, lname))            
         return {str(self.index).ljust(2, '*'): lis}
         
 class AnaDataset:
@@ -489,54 +505,39 @@ class AnaDataset:
          *Parameters*
 
         - **lname** : integer (default 20) - length of the names        
-        - **width** : integer (default 5) - length of the lines        
+        - **width** : integer (default 5) - length of the lines     
+        - **string** : boolean (default True) - if True return String else return dict
         - **mode** : string (default 'derived') - kind of tree :
             'derived' : derived tree
             'distance': min distance tree
-            'diff': min dist rate tree
         '''
-        child = [None] * (len(self.infos) + 1)
-        for i in range(len(self.infos)):
-            parent = self.infos[i][modeparent]
-            if child[parent + 1] is None:
-                child[parent + 1] = []
-            child[parent + 1].append(i)
-        tr = self._dic_noeud(-1, child, lname, mode)
+        tree = self.root.dic_noeud(mode, lname)
         if string:
-            tre = pprint.pformat(tr, indent=0, width=width)
+            tre = pprint.pformat(tree, indent=0, width=width)
             tre = tre.replace('---', ' - ')
             tre = tre.replace('  ', ' ')
             tre = tre.replace('*', ' ')
-            for c in ["'", "\"", "{", "[", "]", "}", ","]:
-                tre = tre.replace(c, "")
+            for car in ["'", "\"", "{", "[", "]", "}", ","]:
+                tre = tre.replace(car, "")
             return tre
-        return tr
+        return Util.clean_dic(tree, '*', ' ')
     
-    """def _dic_noeud(self, n, child, lname, mode):
-        '''generate a dict with nodes data defined by 'child' '''
-        if n == -1:
-            lis = ['root-' + mode + '*(' + str(len(self)) + ')']
-        else:
-            lis = 
-            adding = ''
-            if mode == 'distance':
-                adding = str(self.infos[n]['distance']) + ' - '
-            elif mode == 'diff':
-                adding = str(format(self.infos[n]['rateder'], '.2e')) + ' - '
-            adding += str(self.infos[n]['lencodec'])
-            name = self.infos[n]['name'] + ' (' + adding + ')'
-            lis = [name.replace(' ', '*').replace("'", '*')]
-        if child[n+1]:
-            for ch in child[n+1]:
-                if ch != n:
-                    lis.append(self._dic_noeud(ch, child, lname, mode))
-        return {str(n).ljust(2, '*'): lis}
-    """
 class Util:
-
+    
     @staticmethod 
     def reduce_dic(dic):
         return {key: val for key, val in dic.items() if not val is None}    
+
+    @staticmethod 
+    def clean_dic(obj, old, new):
+        if isinstance(obj, dict):
+            return {Util.clean_dic(key, old, new): Util.clean_dic(val, old, new)
+                    for key, val in obj.items()}
+        if isinstance(obj, str):
+            return obj.replace(old, new)   
+        if isinstance(obj, list):
+            return [Util.clean_dic(val, old, new) for val in obj]
+        return obj        
 
 class AnalysisError(Exception):
     ''' Analysis Exception'''
