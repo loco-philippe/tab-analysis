@@ -398,25 +398,29 @@ class AnaDfield(AnaField):
                 listparent.append(parent)
         return listparent
 
-    def dic_noeud(self, n, mode): # child, lname, mode):
+    def dic_noeud(self, mode): # child, lname, mode):
         '''generate a dict with nodes data '''
         if self == self.dataset.root:
-            lis = ['root-' + mode + '*(' + str(self.dmaxcodec) + ')']
-        else:
-            adding = ''
+            lis = ['root-' + mode + '*(' + str(self.lencodec) + ')']
+            return {str(-1).ljust(2, '*'): lis}
+        adding = ''
+        if mode == 'distance':
+            rel_parent = self.dataset.get_relation(self, self.p_distance)
+            adding = str(rel_parent.distance) + ' - '
+        adding += str(self.lencodec)
+        name = self.idfield + ' (' + adding + ')'
+        lis = [name.replace(' ', '*').replace("'", '*')]
+        if self.category != COUPLED:
+            for rel in self.list_coupled:
+                lis.append(rel.relation[1].dic_noeud(mode))            
+        if not self.category in (ROOTED, UNIQUE):
             if mode == 'distance':
-                adding = str(self.dataset.get_relation(self, self.p_distance).distance) + ' - '
-            '''elif mode == 'diff':
-                adding = str(format(self.infos[n]['rateder'], '.2e')) + ' - '''
-            adding += str(self.lencodec)
-            name = self.idfield + ' (' + adding + ')'
-            lis = [name.replace(' ', '*').replace("'", '*')]
-        """if child[n+1]:
-            for ch in child[n+1]:
-                if ch != n:
-                    lis.append(self._dic_noeud(ch, child, lname, mode))
-        """
-        return {str(n).ljust(2, '*'): lis}
+                childs = [rel.relation[1] for rel in self.list_relations 
+                          if rel.relation[1].p_distance == self and 
+                             rel.relation[1].category != COUPLED]
+            for fld in childs:
+                lis.append(fld.dic_noeud(mode))            
+        return {str(self.index).ljust(2, '*'): lis}
         
 class AnaDataset:
 
@@ -461,8 +465,10 @@ class AnaDataset:
             self.relations[oth][fld] = AnaRelation([oth, fld], dist)
 
     def get_relation(self, fld1, fld2):
-        if self.dfield(fld1) == self.root:
-            return AnaRelation([]) #!!! 
+        fl1 = self.dfield(fld1)
+        fl2 = self.dfield(fld2)
+        if self.root in [fl1, fl2]:
+            return AnaRelation([fl1, fl2], len(self))
         return self.relations[self.dfield(fld1)][self.dfield(fld2)]
     
     @property 
@@ -472,14 +478,46 @@ class AnaDataset:
 
     def dfield(self, fld):
         if isinstance(fld, str):
-            return [dfld for dfld in self.fields if dfld.idfield == fld][0]    
+            if fld in [dfld.idfield for dfld in self.fields]:
+                return [dfld for dfld in self.fields if dfld.idfield == fld][0]    
+            return self.root
         return AnaDfield(fld, self)
+
+    def tree(self, mode='derived', width=5, lname=20, string=True):
+        '''return a string with a tree of derived Field.
+
+         *Parameters*
+
+        - **lname** : integer (default 20) - length of the names        
+        - **width** : integer (default 5) - length of the lines        
+        - **mode** : string (default 'derived') - kind of tree :
+            'derived' : derived tree
+            'distance': min distance tree
+            'diff': min dist rate tree
+        '''
+        child = [None] * (len(self.infos) + 1)
+        for i in range(len(self.infos)):
+            parent = self.infos[i][modeparent]
+            if child[parent + 1] is None:
+                child[parent + 1] = []
+            child[parent + 1].append(i)
+        tr = self._dic_noeud(-1, child, lname, mode)
+        if string:
+            tre = pprint.pformat(tr, indent=0, width=width)
+            tre = tre.replace('---', ' - ')
+            tre = tre.replace('  ', ' ')
+            tre = tre.replace('*', ' ')
+            for c in ["'", "\"", "{", "[", "]", "}", ","]:
+                tre = tre.replace(c, "")
+            return tre
+        return tr
     
-    def _dic_noeud(self, n, child, lname, mode):
+    """def _dic_noeud(self, n, child, lname, mode):
         '''generate a dict with nodes data defined by 'child' '''
         if n == -1:
-            lis = ['root-' + mode + '*(' + str(len(self.iobj)) + ')']
+            lis = ['root-' + mode + '*(' + str(len(self)) + ')']
         else:
+            lis = 
             adding = ''
             if mode == 'distance':
                 adding = str(self.infos[n]['distance']) + ' - '
@@ -493,7 +531,7 @@ class AnaDataset:
                 if ch != n:
                     lis.append(self._dic_noeud(ch, child, lname, mode))
         return {str(n).ljust(2, '*'): lis}
-    
+    """
 class Util:
 
     @staticmethod 
