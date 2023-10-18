@@ -3,6 +3,14 @@
 Created on Thu Oct 12 14:49:34 2023
 
 @author: philippe@loco-labs.io
+
+This module analyses structure and relationships included in a tabular object 
+(Pandas DataFrame, Dataset, list of list) :
+- Structure of a single field (class AnaField),
+- Relationship between two fields (class AnaRelation)
+- Structure and relationships of fields inside a dataset (class AnaDfield)
+- Structure of a dataset (class AnaDataset)
+
 """
 import copy
 import json
