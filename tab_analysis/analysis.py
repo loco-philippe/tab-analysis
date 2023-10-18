@@ -11,6 +11,9 @@ This module analyses structure and relationships included in a tabular object
 - Structure and relationships of fields inside a dataset (class AnaDfield)
 - Structure of a dataset (class AnaDataset)
 
+It contains the classes `analysis.AnaField`, `analysis.AnaRelation`,
+`analysis.AnaDfield`, `analysis.AnaDataset`, `analysis.Util`, `analysis.AnalysisError`.
+
 """
 import copy
 import json
@@ -63,21 +66,38 @@ FIELDS = 'fields'
 LENGTH = 'length'
 
 class AnaField:
-    '''This class analyses relationships included in a tabular object 
-    (Pandas DataFrame, Dataset, Observation, list of list).
+    '''This class analyses field entities.
 
-    The Analysis class includes the following functions:
-    - identification and qualification of the relationships between Field,
-    - generation of the global properties of the structure
-    - data actualization based on structure updates
+    *Attributes* 
 
-    *Attributes* :
+    - **idfield** : string - name or Id of the field
+    - **lencodec**: integer - codec length
+    - **mincodec**: integer - minimal codec length
+    - **maxcodec**: integer - minimal codec length
+    - **hashf**: integer - hash value to identify modifications
 
-    - **iobj** : Dataset or Observation associated to the Analysis object
+    *dynamic values (@property)*
+    
+    - `iscomplete`
+    - `ratecodec`
+    - `dmincodec`
+    - `dmaxcodec`
+    - `rancodec`
+    - `typecodec`
+    
+    *methods*
+    
+    - `from_dict (class method)
+    - `to_dict` (instance method)
+    
     '''    
    
     def __init__(self, idfield, lencodec=None, mincodec=None, maxcodec=None, hashf=None):
-
+        '''Creation mode :
+            - single dict attribute where keys are attributes name,
+            - single AnaField attribute to make a copy
+            - multiple attributes '''
+                
         if isinstance(idfield, dict):
             self.idfield = idfield.get(IDFIELD, None)
             self.lencodec = idfield.get(LENCODEC, None)
@@ -99,38 +119,47 @@ class AnaField:
         self.mincodec = mincodec
         self.maxcodec = maxcodec
         self.hashf = hashf
-        #AnaField.id_field[idfield] = self
 
     
     def __len__(self):
+        '''length of the field (maxcodec)'''
         return self.maxcodec if self.maxcodec else self.lencodec
     
     def __repr__(self):
+        '''representation of the field (idfield and a dict with other attributes)'''
         rep = IDFIELD + ': ' + str(self.idfield) + '\n' + '    ' 
         return rep + json.dumps(self.to_dict())
     
     def __eq__(self, other):
-        ''' equal if class and values are equal'''
+        ''' equal if class and attributes are equal'''
         return self.__class__ .__name__ == other.__class__.__name__ and \
             self.idfield == other.idfield and self.lencodec == other.lencodec and \
             self.mincodec == other.mincodec and self.maxcodec == other.maxcodec and \
             self.hashf == other.hashf
 
     def __hash__(self):
-        '''return hash(values)'''
+        '''return hash (attributes)'''
         return hash(self.idfield) + hash(self.lencodec) + hash(self.mincodec) \
              + hash(self.maxcodec) + hash(self.hashf) 
     
     def __str__(self):
+        '''dict with the attributes'''
         return json.dumps(self.to_dict(idfield=True))
 
     def __copy__(self):
-        ''' Copy all the data '''
+        ''' Copy all the attributes '''
         return self.__class__(self)
     
     @classmethod 
-    def from_dic(cls, fld, length):
-        return cls(fld[IDFIELD], fld[LENCODEC], fld.get(MINCODEC, None), length)
+    def from_dict(cls, dic_fld, length):
+        '''field is created with a dict
+        
+        **parameters**
+        
+        - **dic_fld***: dict where items are attributes
+        - **length**: length of the field'''
+        return cls(dic_fld[IDFIELD], dic_fld[LENCODEC], 
+                   dic_fld.get(MINCODEC, None), length)
     
     def to_dict(self, full=False, idfield=False, notnone=True):
         dic = {LENCODEC: self.lencodec, MINCODEC: self.mincodec, 
@@ -320,8 +349,8 @@ class AnaDfield(AnaField):
     
              
     """@classmethod 
-    def from_dic(cls, fld, dts, length):
-        return cls(AnaField.from_dic(fld, length), dts)"""
+    def from_dict(cls, fld, dts, length):
+        return cls(AnaField.from_dict(fld, length), dts)"""
     
     @property 
     def index(self):
@@ -471,10 +500,10 @@ class AnaDataset:
                sum([hash(rel) for rel in self.relations]) + hash(self.hashd)
              
     @staticmethod 
-    def from_dic(dic):
+    def from_dict(dic):
         iddataset = dic.get(IDDATASET, None)
         length = dic.get(LENGTH, None)
-        fields = [AnaField.from_dic(fld, length) for fld in dic[FIELDS]]   
+        fields = [AnaField.from_dict(fld, length) for fld in dic[FIELDS]]   
         length = length if length else max([len(fld) for fld in fields])
         dts = AnaDataset(fields, None, iddataset)
         for fld1, rel_fld1 in dic[RELATIONS].items():

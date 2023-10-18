@@ -115,7 +115,7 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
                         dts.relations[AnaDfield(i2, dts)][AnaDfield(i1, dts)].dist == 3)
         self.assertTrue(dts.relations[AnaDfield(i1, dts)][AnaDfield(i3, dts)].dist == 
                         dts.relations[AnaDfield(i3, dts)][AnaDfield(i1, dts)].dist == 6)
-        self.assertEqual(dts, AnaDataset.from_dic(dic))
+        self.assertEqual(dts, AnaDataset.from_dict(dic))
 
     def test_casting(self):
         self.assertTrue(dts.dfield(dts.fields[0]) ==
@@ -138,7 +138,17 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
                          [[], [], [dts.fields[1]], [dts.fields[2], dts.fields[1]],
                           [dts.fields[3], dts.fields[2], dts.fields[1]]])
 
-
+    def test_tree(self):
+        self.assertEqual(dts.tree(string=False), {'-1': ['root-derived (6)',
+          {'0 ': ['i0 (0 - 6)']},
+          {'1 ': ['i1 (3 - 3)', {'2 ': ['i2 (1 - 2)']}]},
+          {'3 ': ['i3 (4 - 2)', {'4 ': ['i4 (0 - 2)']}]}]})
+        self.assertEqual(dts.tree('distance', string=False), {'-1': ['root-distance (6)',
+          {'0 ': ['i0 (0 - 6)']},
+          {'1 ': ['i1 (3 - 3)',
+            {'2 ': ['i2 (1 - 2)', {'3 ': ['i3 (2 - 2)', {'4 ': ['i4 (0 - 2)']}]}]}]}]})
+        
+                         
 if __name__ == '__main__':
     
     unittest.main(verbosity=2)
