@@ -18,6 +18,7 @@ It contains the classes `analysis.AnaField`, `analysis.AnaRelation`,
 import copy
 import json
 import pprint
+from itertools import combinations
 
 NULL = 'null'
 UNIQUE = 'unique'
@@ -523,7 +524,7 @@ class AnaDataset:
         if self.root in [fl1, fl2]:
             return AnaRelation([fl1, fl2], len(self))
         return self.relations[self.dfield(fld1)][self.dfield(fld2)]
-    
+            
     @property 
     def root(self):
         len_self = len(self)
@@ -558,6 +559,19 @@ class AnaDataset:
                 tre = tre.replace(car, "")
             return tre
         return Util.clean_dic(tree, '*', ' ')
+
+
+    def partition(self):
+        crossed = [rel for rel in self.relations if rel.typecoupl == CROSSED]
+        partitions = []
+        out = False
+        for repeat in list(range(len(crossed) - 1)):
+            chemins = combinations(crossed, repeat + 2)
+            for chemin in chemins:
+                flds = [rel.relation[i] for rel in chemin for i in [0,1]]
+                
+            ok = True
+        while ok:
     
 class Util:
     
