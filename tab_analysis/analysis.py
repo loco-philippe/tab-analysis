@@ -526,6 +526,10 @@ class AnaDataset:
         return self.relations[self.dfield(fld1)][self.dfield(fld2)]
             
     @property 
+    def ana_relations(self):
+        return [rel for fldrel in self.relations.values() for rel in fldrel.values()]
+
+    @property 
     def root(self):
         len_self = len(self)
         return AnaDfield(AnaField(ROOT, len_self, len_self, len_self), self)
@@ -562,16 +566,25 @@ class AnaDataset:
 
 
     def partition(self):
-        crossed = [rel for rel in self.relations if rel.typecoupl == CROSSED]
+        crossed = [rel for rel in self.ana_relations if rel.typecoupl == CROSSED
+                   and rel.relation[1].index > rel.relation[0].index
+                   and rel.relation[0].category != COUPLED
+                   and rel.relation[1].category != COUPLED]
+        if not crossed:
+            return []
+        if len(crossed) == 1 and crossed[0].dist == len(self):
+            return [crossed[0].relation]
         partitions = []
         out = False
         for repeat in list(range(len(crossed) - 1)):
             chemins = combinations(crossed, repeat + 2)
             for chemin in chemins:
-                flds = [rel.relation[i] for rel in chemin for i in [0,1]]
-                
+                flds = list(set([rel.relation[i] for rel in chemin for i in [0,1]]))
+                if (len(flds) == len(chemin) and 
+                    sum([len(fld) for fld in flds]) == len(self)):
+                    xxxxx
             ok = True
-        while ok:
+        """"while ok:"""
     
 class Util:
     
