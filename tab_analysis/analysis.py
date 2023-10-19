@@ -152,6 +152,15 @@ class AnaField:
         return self.__class__(self)
         
     def to_dict(self, full=False, idfield=False, notnone=True):
+        '''return a dict with field attributes.
+
+         *Parameters*
+
+        - **full** : boolean (default False) - if True, all the attributes are included       
+        - **idfield** : boolean (default False) - if True, idfield is included    
+        - **notnone** : boolean (default True) - if True, None values are not included    
+        '''        
+        
         dic = {LENCODEC: self.lencodec, MINCODEC: self.mincodec, 
                MAXCODEC: self.maxcodec, HASHF: self.hashf}
         if idfield or full:
@@ -166,28 +175,34 @@ class AnaField:
 
     @property
     def iscomplete(self):
+        '''dynamic boolean attribute : True if all attributes are present'''
         return not self.maxcodec is None and not self.mincodec is None
     
     @property
     def ratecodec(self):
+        '''dynamic float ratecodec attribute'''
         if self.iscomplete and self.maxcodec - self.mincodec:
             return (self.maxcodec - self.lencodec) / (self.maxcodec - self.mincodec)
         return None
 
     @property
     def dmincodec(self):
+        '''dynamic integer dmincodec attribute'''
         return self.lencodec - self.mincodec if self.iscomplete else None
     
     @property
     def dmaxcodec(self):
+        '''dynamic integer dmaxcodec attribute'''
         return self.maxcodec - self.lencodec if self.iscomplete else None
     
     @property
     def rancodec(self):
+        '''dynamic integer rancodec attribute'''
         return self.maxcodec - self.mincodec if self.iscomplete else None
 
     @property
     def typecodec(self):
+        '''dynamic string typecodec (null, unique, complete, full, default) attribute'''
         if self.maxcodec is None or self.mincodec is None:
             return None
         if self.maxcodec == 0:
@@ -219,11 +234,15 @@ class AnaRelation:
     - `diff`
     - `dran`
     - `distomin`
+    - `distomax`
+    - `distance`
+    - `ratecpl`
+    - `rateder`
+    - `typecoupl`
     
     *instance methods*
     
-    - `to_dict`
-    
+    - `to_dict`    
     '''    
     
     def __init__(self, relation, dist, hashr=None):
@@ -319,7 +338,32 @@ class AnaRelation:
         return LINKED
     
 class AnaDfield(AnaField):
+    '''This class analyses structure and relationships of fields inside a dataset
 
+    *Attributes* :
+
+    - **dataset** : AnaDataset object where AnaDfield is included
+    - **AnaField attributes** : inheritance of AnaField
+
+    *dynamic values (@property)*
+    
+    - `index`
+    - `fields`
+    - `list_relations`
+    - `list_p_derived`
+    - `list_c_derived`
+    - `list_coupled`
+    - `dist_root`
+    - `category`
+    - `p_derived`
+    - `p_distance`
+    
+    *instance methods*
+    
+    - `list_parents`
+    - `dic_noeud`
+    
+    '''    
     def __new__(cls, other, dataset=None):
         if isinstance(other, AnaDfield):
             new = AnaDfield.__copy__(other)
@@ -333,9 +377,6 @@ class AnaDfield(AnaField):
     def __init__(self, other, dataset):
         self.dataset = dataset   
 
-    '''def __repr__(self):
-        return 'Field : ' + str(self.idfield)'''
-
     def __eq__(self, other):
         ''' equal if class and values are equal'''
         return super().__eq__(other)
@@ -347,11 +388,6 @@ class AnaDfield(AnaField):
     def __copy__(self):
         ''' Copy all the data '''
         return self.__class__(AnaField(self), self.dataset)
-    
-             
-    """@classmethod 
-    def from_dict(cls, fld, dts, length):
-        return cls(AnaField.from_dict(fld, length), dts)"""
     
     @property 
     def index(self):
@@ -390,9 +426,6 @@ class AnaDfield(AnaField):
         if COUPLED in [rel.typecoupl for rel in self.list_relations 
                        if rel.relation[1].index < self.index]:
             return COUPLED
-        '''if not [rel for rel in self.list_p_derived if
-                not rel.relation[1].typecodec in (COMPLETE, FULL)]:
-            return ROOTDERIVED'''
         if not self.list_c_derived: 
             return DERIVED
         return MIXED
