@@ -147,8 +147,12 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
           {'0 ': ['i0 (0 - 6)']},
           {'1 ': ['i1 (3 - 3)',
             {'2 ': ['i2 (1 - 2)', {'3 ': ['i3 (2 - 2)', {'4 ': ['i4 (0 - 2)']}]}]}]}]})
+
+    def test_partition(self):
+        self.assertEqual(dts.partition('index'), [[1, 3], [0]])
+        self.assertEqual(dts.partition('id'), [['i1', 'i3'], ['i0']])
         
-                         
+        
 if __name__ == '__main__':
     
     unittest.main(verbosity=2)

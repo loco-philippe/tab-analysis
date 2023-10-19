@@ -19,6 +19,8 @@ import copy
 import json
 import pprint
 from itertools import combinations
+from operator import mul
+from functools import reduce
 
 NULL = 'null'
 UNIQUE = 'unique'
@@ -86,10 +88,9 @@ class AnaField:
     - `rancodec`
     - `typecodec`
     
-    *methods*
+    *instance methods*
     
-    - `from_dict (class method)
-    - `to_dict` (instance method)
+    - `to_dict`
     
     '''    
    
@@ -127,9 +128,8 @@ class AnaField:
         return self.maxcodec if self.maxcodec else self.lencodec
     
     def __repr__(self):
-        '''representation of the field (idfield and a dict with other attributes)'''
-        rep = IDFIELD + ': ' + str(self.idfield) + '\n' + '    ' 
-        return rep + json.dumps(self.to_dict())
+        '''representation of the field (class name + idfield)'''
+        return self.__class__.__name__ + '(' + self.idfield + ')'
     
     def __eq__(self, other):
         ''' equal if class and attributes are equal'''
@@ -150,18 +150,7 @@ class AnaField:
     def __copy__(self):
         ''' Copy all the attributes '''
         return self.__class__(self)
-    
-    @classmethod 
-    def from_dict(cls, dic_fld, length):
-        '''field is created with a dict
         
-        **parameters**
-        
-        - **dic_fld***: dict where items are attributes
-        - **length**: length of the field'''
-        return cls(dic_fld[IDFIELD], dic_fld[LENCODEC], 
-                   dic_fld.get(MINCODEC, None), length)
-    
     def to_dict(self, full=False, idfield=False, notnone=True):
         dic = {LENCODEC: self.lencodec, MINCODEC: self.mincodec, 
                MAXCODEC: self.maxcodec, HASHF: self.hashf}
@@ -214,27 +203,38 @@ class AnaField:
         return MIXED        
     
 class AnaRelation:
-    '''This class analyses relationships included in a tabular object 
-    (Pandas DataFrame, Dataset, Observation, list of list).
-
-    The Analysis class includes the following functions:
-    - identification and qualification of the relationships between Field,
-    - generation of the global properties of the structure
-    - data actualization based on structure updates
+    '''This class analyses relationship between two fields
 
     *Attributes* :
 
-    - **iobj** : Dataset or Observation associated to the Analysis object
+    - **relation** : List of the two fields involved in the relationship
+    - **dist** : value of the relationship
+    - **hashr**: integer - hash value to identify modifications
+
+    *dynamic values (@property)*
+    
+    - `id_relation`
+    - `dmax`
+    - `dmin`
+    - `diff`
+    - `dran`
+    - `distomin`
+    
+    *instance methods*
+    
+    - `to_dict`
+    
     '''    
     
     def __init__(self, relation, dist, hashr=None):
+        '''Creation with class attributes'''
         self.relation = relation
         self.dist = dist
         self.hashr = hashr
 
     def __repr__(self):
-        rep = RELATION + ': ' + str(self.id_relation) + '\n' + '    ' 
-        return rep + json.dumps(self.to_dict())
+        '''representation of the field (class name + idfield)'''
+        return self.__class__.__name__ + '(' + self.id_relation + ')'
     
     def __str__(self):
         return json.dumps(self.to_dict(relation=True))
@@ -269,7 +269,7 @@ class AnaRelation:
     @property
     def id_relation(self):
         if self.relation:
-            return [rel.idfield for rel in self.relation]
+            return [fld.idfield for fld in self.relation]
         return []
 
     @property 
@@ -333,8 +333,8 @@ class AnaDfield(AnaField):
     def __init__(self, other, dataset):
         self.dataset = dataset   
 
-    def __repr__(self):
-        return 'Field : ' + str(self.idfield)
+    '''def __repr__(self):
+        return 'Field : ' + str(self.idfield)'''
 
     def __eq__(self, other):
         ''' equal if class and values are equal'''
@@ -565,26 +565,29 @@ class AnaDataset:
         return Util.clean_dic(tree, '*', ' ')
 
 
-    def partition(self):
+    def partition(self, mode='field'):
         crossed = [rel for rel in self.ana_relations if rel.typecoupl == CROSSED
                    and rel.relation[1].index > rel.relation[0].index
                    and rel.relation[0].category != COUPLED
                    and rel.relation[1].category != COUPLED]
         if not crossed:
             return []
+        partitions = [[fld] for fld in self.fields if fld.category == ROOTED]
         if len(crossed) == 1 and crossed[0].dist == len(self):
-            return [crossed[0].relation]
-        partitions = []
-        out = False
-        for repeat in list(range(len(crossed) - 1)):
-            chemins = combinations(crossed, repeat + 2)
-            for chemin in chemins:
-                flds = list(set([rel.relation[i] for rel in chemin for i in [0,1]]))
-                if (len(flds) == len(chemin) and 
-                    sum([len(fld) for fld in flds]) == len(self)):
-                    xxxxx
-            ok = True
-        """"while ok:"""
+            partitions.insert(0, [crossed[0].relation])
+            return partitions
+        for repeat in list(range(len(crossed))):
+            candidates = combinations(crossed, repeat + 1)
+            for candidat in candidates:
+                flds = list(set([rel.relation[i] for rel in candidat for i in [0,1]]))
+                if reduce(mul,[fld.lencodec for fld in flds]) == len(self):
+                    partitions.insert(0, flds)
+        for ind in range(len(partitions)):
+            if mode == 'id':
+                partitions[ind] = [fld.idfield for fld in partitions[ind]]
+            elif mode == 'index':
+                partitions[ind] = [fld.index for fld in partitions[ind]]
+        return partitions
     
 class Util:
     
