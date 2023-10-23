@@ -551,18 +551,6 @@ class AnaDataset:
         return hash(self.iddataset) + sum([hash(fld) for fld in self.fields]) + \
                sum([hash(rel) for rel in self.relations]) + hash(self.hashd)
              
-    '''@staticmethod 
-    def from_dict(dic):
-        iddataset = dic.get(IDDATASET, None)
-        length = dic.get(LENGTH, None)
-        fields = [AnaField.from_dict(fld, length) for fld in dic[FIELDS]]   
-        #fields = [AnaField(fld, length) for fld in dic[FIELDS]]   
-        length = length if length else max([len(fld) for fld in fields])
-        dts = AnaDataset(fields, None, iddataset)
-        for fld1, rel_fld1 in dic[RELATIONS].items():
-            dts.set_relations(dts.dfield(fld1), rel_fld1)
-        return dts'''
-    
     def set_relations(self, field, dic_relations):
         fld = self.dfield(field)
         for other, dist in dic_relations.items():

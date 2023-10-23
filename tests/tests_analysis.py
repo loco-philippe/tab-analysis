@@ -9,6 +9,8 @@ from pprint import pprint
 from tab_analysis import AnaField, AnaRelation, AnaDataset, AnaDfield
 from tab_analysis import ROOT, ROOTED, ROOTDERIVED, DERIVED, COUPLED
 from tab_analysis import NULL, UNIQUE, COMPLETE, FULL, DEFAULT, MIXED
+from observation.cdataset import Cdataset
+from observation.cfield import Cfield
 
 """
 il = Dataset.ntv([[1, 2, 3, 4, 5, 6],               root coupled
@@ -91,6 +93,20 @@ dic =   {'name': 'test', 'length': 6,
                        'i2': {'i3': 4, 'i4': 4},
                        'i3': {'i4': 2}}
         }
+class Test_Cdataset(unittest.TestCase):
+    
+    def test_dict(self):
+        cdts = Cdataset(
+            [Cfield([1, 2, 3, 4, 5, 6], 'i0', default=True),              #root coupled
+             Cfield(['a', 'b', 'b', 'c', 'c', 'a'], 'i1', default=True),  #mixed
+             Cfield([20, 10, 10, 10, 10, 20], 'i2', default=True),        #derived from 1
+             Cfield([200, 200, 300, 200, 300, 300],  'i3', default=True), #derived from root
+             Cfield([201, 201, 301, 201, 301, 301],  'i4', default=True)] #coupled to i3
+            , 'test') 
+        self.assertEqual(cdts.analys['relations'], dic['relations'])
+        self.assertEqual(cdts.analys['name'], dic['name'])
+        self.assertEqual(cdts.analys['length'], dic['length'])
+
 class Test_AnaField_AnaRelation(unittest.TestCase):
     
     def test_creation(self):
@@ -116,7 +132,7 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
         self.assertTrue(dts.relations[AnaDfield(i1, dts)][AnaDfield(i3, dts)].dist == 
                         dts.relations[AnaDfield(i3, dts)][AnaDfield(i1, dts)].dist == 6)
         self.assertEqual(dts, AnaDataset(dic))
-
+        
     def test_casting(self):
         self.assertTrue(dts.dfield(dts.fields[0]) ==
                         dts.dfield(AnaField(dts.fields[0])) ==
