@@ -115,7 +115,7 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
                         dts.relations[AnaDfield(i2, dts)][AnaDfield(i1, dts)].dist == 3)
         self.assertTrue(dts.relations[AnaDfield(i1, dts)][AnaDfield(i3, dts)].dist == 
                         dts.relations[AnaDfield(i3, dts)][AnaDfield(i1, dts)].dist == 6)
-        self.assertEqual(dts, AnaDataset.from_dict(dic))
+        self.assertEqual(dts, AnaDataset(dic))
 
     def test_casting(self):
         self.assertTrue(dts.dfield(dts.fields[0]) ==

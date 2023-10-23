@@ -253,7 +253,7 @@ class AnaRelation:
 
     def __repr__(self):
         '''representation of the field (class name + idfield)'''
-        return self.__class__.__name__ + '(' + self.id_relation + ')'
+        return self.__class__.__name__ + '(' + str(self.id_relation) + ')'
     
     def __str__(self):
         return json.dumps(self.to_dict(relation=True))
@@ -511,14 +511,32 @@ class AnaDfield(AnaField):
         
 class AnaDataset:
 
-    def __init__(self, fields=None, relations=None, iddataset=None, hashd=None):
+    def __init__(self, fields=None, relations=None, iddataset=None, 
+                 leng=None, hashd=None):
+        if isinstance(fields, AnaDataset):
+            self.iddataset = fields.iddataset
+            self.fields = fields.fields
+            self.relations = fields.relations
+            self.hashd = fields.hashd
+            return
+        if isinstance(fields, dict):
+            iddataset = fields.get(IDDATASET, None)
+            leng = fields.get(LENGTH, None)
+            relations = fields.get(RELATIONS, None)
+            hashd = fields.get(hashd)
+            fields = fields.get(FIELDS, None)
         self.iddataset = iddataset
-        self.fields = None if not fields else [AnaDfield(field, self) for field in fields]
+        self.fields = [AnaDfield(AnaField(field), self) for field in fields] if fields else []
+        if leng:
+            for fld in self.fields:
+                fld.maxcodec = leng
         self.relations = {field: {} for field in self.fields}
         if relations:
-            self.relations |= relations
+            #self.relations |= relations
+            for fld, dic_relation in relations.items():
+                self.set_relations(fld, dic_relation)
         self.hashd = hashd
-
+            
     def __len__(self):
         return max([len(fld) for fld in self.fields])
 
@@ -533,16 +551,17 @@ class AnaDataset:
         return hash(self.iddataset) + sum([hash(fld) for fld in self.fields]) + \
                sum([hash(rel) for rel in self.relations]) + hash(self.hashd)
              
-    @staticmethod 
+    '''@staticmethod 
     def from_dict(dic):
         iddataset = dic.get(IDDATASET, None)
         length = dic.get(LENGTH, None)
         fields = [AnaField.from_dict(fld, length) for fld in dic[FIELDS]]   
+        #fields = [AnaField(fld, length) for fld in dic[FIELDS]]   
         length = length if length else max([len(fld) for fld in fields])
         dts = AnaDataset(fields, None, iddataset)
         for fld1, rel_fld1 in dic[RELATIONS].items():
             dts.set_relations(dts.dfield(fld1), rel_fld1)
-        return dts
+        return dts'''
     
     def set_relations(self, field, dic_relations):
         fld = self.dfield(field)
@@ -568,6 +587,9 @@ class AnaDataset:
         return AnaDfield(AnaField(ROOT, len_self, len_self, len_self), self)
 
     def dfield(self, fld):
+        '''return the AnaDfield matching with fld. Fld is a Str or a AnaField'''
+        if isinstance(fld, AnaDfield):
+            return fld
         if isinstance(fld, str):
             if fld in [dfld.idfield for dfld in self.fields]:
                 return [dfld for dfld in self.fields if dfld.idfield == fld][0]    
