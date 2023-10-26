@@ -5,9 +5,9 @@ Created on Thu Oct 12 23:06:12 2023
 @author: philippe@loco-labs.io
 """
 import unittest
-from pprint import pprint
+#from pprint import pprint
 from tab_analysis import AnaField, AnaRelation, AnaDataset, AnaDfield
-from tab_analysis import ROOT, ROOTED, ROOTDERIVED, DERIVED, COUPLED
+from tab_analysis import ROOT, ROOTED, DERIVED, COUPLED
 from tab_analysis import NULL, UNIQUE, COMPLETE, FULL, DEFAULT, MIXED
 from observation.cdataset import Cdataset
 from observation.cfield import Cfield
@@ -104,9 +104,9 @@ class Test_Cdataset(unittest.TestCase):
              Cfield([200, 200, 300, 200, 300, 300],  'i3', default=True), #derived from root
              Cfield([201, 201, 301, 201, 301, 301],  'i4', default=True)] #coupled to i3
             , 'test') 
-        self.assertEqual(cdts.analys['relations'], dic['relations'])
-        self.assertEqual(cdts.analys['name'], dic['name'])
-        self.assertEqual(cdts.analys['length'], dic['length'])
+        self.assertEqual(cdts.analys()['relations'], dic['relations'])
+        self.assertEqual(cdts.analys()['name'], dic['name'])
+        self.assertEqual(cdts.analys()['length'], dic['length'])
 
 class Test_AnaField_AnaRelation(unittest.TestCase):
     
@@ -166,8 +166,8 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
             {'2 ': ['i2 (1 - 2)', {'3 ': ['i3 (2 - 2)', {'4 ': ['i4 (0 - 2)']}]}]}]}]})
 
     def test_partition(self):
-        self.assertEqual(dts.partition('index'), [[1, 3], [0]])
-        self.assertEqual(dts.partition('id'), [['i1', 'i3'], ['i0']])
+        self.assertEqual(dts.partition('index', distributed=False), [[1, 3], [0]])
+        self.assertEqual(dts.partition('id', distributed=False), [['i1', 'i3'], ['i0']])
         
 class Test_AnaDataset(unittest.TestCase):
 
@@ -186,8 +186,10 @@ class Test_AnaDataset(unittest.TestCase):
                      'location': 	["fr", "gb", "es", "ch", "gb", "fr", "es", "ch"]}
         ilm = Sdataset.ntv(fruits) 
         self.assertEqual(ilm.analysis.getpartition(), [[0, 7], [1, 2], [6, 7], [5]])
-        ana = AnaDataset(ilm.analys)
-        print(ana.partition('index'))
+        ana = AnaDataset(ilm.analys(True))
+        self.assertEqual(ana.partition('index'), [[0, 7], [1, 2], [6, 7], [5]])
+        ana = AnaDataset(ilm.analys())
+        self.assertEqual(ana.partition('index', distributed=False), [[0, 1, 6], [0, 7], [1, 2], [6, 7], [5]])
             
 if __name__ == '__main__':
     

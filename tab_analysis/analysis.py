@@ -15,7 +15,6 @@ It contains the classes `analysis.AnaField`, `analysis.AnaRelation`,
 `analysis.AnaDfield`, `analysis.AnaDataset`, `analysis.Util`, `analysis.AnalysisError`.
 
 """
-import copy
 import json
 import pprint
 from itertools import combinations
@@ -33,6 +32,7 @@ COUPLED = 'coupled'
 DERIVED = 'derived'
 LINKED = 'linked'
 CROSSED = 'crossed'
+DISTRIBUTED = 'distributed'
 ROOTED = 'rooted'
 ROOTDERIVED = 'root derived'
 ROOT = 'root'
@@ -248,7 +248,12 @@ class AnaRelation:
     def __init__(self, relation, dist, hashr=None):
         '''Creation with class attributes'''
         self.relation = relation
-        self.dist = dist
+        if isinstance(dist, list): 
+            self.dist = dist[0]
+            self.distrib = dist[1]
+        else:
+            self.dist = dist
+            self.distrib = None
         self.hashr = hashr
 
     def __repr__(self):
@@ -262,22 +267,25 @@ class AnaRelation:
         ''' equal if class and values are equal'''
         return self.__class__ .__name__ == other.__class__.__name__ and \
             self.relation == other.relation and self.dist == other.dist and \
-            self.hashr == other.hashr
+            self.hashr == other.hashr and self.distrib == other.distrib
 
     def __hash__(self):
         '''return hash(values)'''
         return hash(self.relation[0]) + hash(self.relation[1]) + \
-               hash(self.dist) + hash(self.hashr)
+               hash(self.dist) + hash(self.hashr) + hash(self.distrib)
                
     def to_dict(self, distance=False, full=False, relation=False, notnone=True):
-        dic = {DIST: self.dist, HASHR: self.hashr}
+        if self.distrib is None:
+            dic = {DIST: self.dist, HASHR: self.hashr} 
+        else:
+            dic = {DIST: [self.dist, self.distrib], HASHR: self.hashr}             
         if relation or full:
             dic[RELATION] = self.id_relation
             dic[TYPECOUPL] = self.typecoupl
         if distance or full:
             dic |= {DISTANCE: self.distance, DISTOMIN: self.distomin,
-                    DISTOMAX: self.distomax, RATECPL: self.ratecpl,
-                    RATEDER: self.rateder}
+                    DISTOMAX: self.distomax, DISTRIBUTED: self.distrib, 
+                    RATECPL: self.ratecpl, RATEDER: self.rateder}
         if full:
             dic |= {DMAX: self.dmax, DMIN: self.dmin,
                     DIFF: self.diff, DRAN: self.dran}
@@ -289,6 +297,12 @@ class AnaRelation:
     def id_relation(self):
         if self.relation:
             return [fld.idfield for fld in self.relation]
+        return []
+    
+    @property
+    def index_relation(self):
+        if self.relation:
+            return [fld.index for fld in self.relation]
         return []
 
     @property 
@@ -532,7 +546,6 @@ class AnaDataset:
                 fld.maxcodec = leng
         self.relations = {field: {} for field in self.fields}
         if relations:
-            #self.relations |= relations
             for fld, dic_relation in relations.items():
                 self.set_relations(fld, dic_relation)
         self.hashd = hashd
@@ -608,29 +621,36 @@ class AnaDataset:
         return Util.clean_dic(tree, '*', ' ')
 
 
-    def partition(self, mode='field'):
+    def partition(self, mode='field', distributed=True):
         crossed = [rel for rel in self.ana_relations if rel.typecoupl == CROSSED
                    and rel.relation[1].index > rel.relation[0].index
                    and rel.relation[0].category != COUPLED
                    and rel.relation[1].category != COUPLED]
+        if distributed:
+            crossed = [rel for rel in crossed if rel.distrib]
         if not crossed:
             return []
-        partitions = [[fld] for fld in self.fields if fld.category == ROOTED]
+        partit = [[fld] for fld in self.fields if fld.category == ROOTED]
         if len(crossed) == 1 and crossed[0].dist == len(self):
-            partitions.insert(0, [crossed[0].relation])
-            return partitions
+            partit.insert(0, [crossed[0].relation])
+            return partit
         for repeat in list(range(len(crossed))):
             candidates = combinations(crossed, repeat + 1)
             for candidat in candidates:
                 flds = list(set([rel.relation[i] for rel in candidat for i in [0,1]]))
-                if reduce(mul,[fld.lencodec for fld in flds]) == len(self):
-                    partitions.insert(0, flds)
-        for ind in range(len(partitions)):
+                if (reduce(mul,[fld.lencodec for fld in flds]) == len(self) and
+                    len(candidat) == sum(range(len(flds))) and 
+                    (not distributed or min([rel.distrib for rel in candidat]))):
+                    partit.insert(0, flds)
+        for ind in range(len(partit)):
             if mode == 'id':
-                partitions[ind] = [fld.idfield for fld in partitions[ind]]
+                partit[ind] = [fld.idfield for fld in partit[ind]]
             elif mode == 'index':
-                partitions[ind] = [fld.index for fld in partitions[ind]]
-        return partitions
+                partit[ind] = [fld.index for fld in partit[ind]]
+        return [list(tup) for tup in 
+                sorted(sorted(list({tuple(sorted(prt)) for prt in partit})), 
+                       key=len, reverse=True)]
+        
     
 class Util:
     
