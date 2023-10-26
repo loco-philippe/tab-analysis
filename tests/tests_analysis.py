@@ -11,6 +11,7 @@ from tab_analysis import ROOT, ROOTED, ROOTDERIVED, DERIVED, COUPLED
 from tab_analysis import NULL, UNIQUE, COMPLETE, FULL, DEFAULT, MIXED
 from observation.cdataset import Cdataset
 from observation.cfield import Cfield
+from observation import Sdataset
 
 """
 il = Dataset.ntv([[1, 2, 3, 4, 5, 6],               root coupled
@@ -168,7 +169,26 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
         self.assertEqual(dts.partition('index'), [[1, 3], [0]])
         self.assertEqual(dts.partition('id'), [['i1', 'i3'], ['i0']])
         
-        
+class Test_AnaDataset(unittest.TestCase):
+
+    def test_sdataset(self):
+        fruits = {'plants': ['fruit', 'fruit', 'fruit', 'fruit',
+                                 'vegetable', 'vegetable', 'vegetable', 'vegetable'],
+                     'quantity': ['1 kg', '10 kg', '1 kg', '10 kg',
+                                   '1 kg', '10 kg', '1 kg', '10 kg'],
+                     'product': ['apple', 'apple', 'orange', 'orange',
+                                  'peppers', 'peppers', 'banana', 'banana'],
+                     'price': [1, 10, 2, 20, 1.5, 15, 1, 1.5],
+                     'group': ['fruit 1', 'fruit 10', 'fruit 1', 'veget',
+                                'veget', 'veget', 'veget', 'veget'],
+                     'id': [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008],
+                     'supplier': ["sup1", "sup1", "sup1", "sup2", "sup2", "sup2", "sup2", "sup1"],
+                     'location': 	["fr", "gb", "es", "ch", "gb", "fr", "es", "ch"]}
+        ilm = Sdataset.ntv(fruits) 
+        self.assertEqual(ilm.analysis.getpartition(), [[0, 7], [1, 2], [6, 7], [5]])
+        ana = AnaDataset(ilm.analys)
+        print(ana.partition('index'))
+            
 if __name__ == '__main__':
     
     unittest.main(verbosity=2)
