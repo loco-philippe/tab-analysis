@@ -293,10 +293,6 @@ class AnaRelation:
             self.relation == other.relation and self.dist == other.dist and \
             self.hashr == other.hashr and self.distrib == other.distrib
 
-    def __lt__(self, other):
-        ''' return a comparison between hash value'''
-        return hash(self) < hash(other)
-    
     def __hash__(self):
         '''return hash value (sum of attributes hash)'''
         return hash(self.relation[0]) + hash(self.relation[1]) + \
@@ -455,6 +451,10 @@ class AnaDfield(AnaField):
     def __copy__(self):
         ''' Copy all the data '''
         return self.__class__(AnaField(self), self.dataset)
+    
+    def __lt__(self, other):
+        ''' return a comparison between field index'''
+        return self.index < other.index
     
     @property 
     def index(self):
@@ -647,7 +647,7 @@ class AnaDataset:
 
     @property 
     def primary(self):
-        part = self.partition()
+        part = self.partitions()
         return part[0] if part else []
 
     @property 
@@ -688,7 +688,7 @@ class AnaDataset:
         return Util.clean_dic(tree, '*', ' ')
 
 
-    def partition(self, mode='field', distributed=True):
+    def partitions(self, mode='field', distributed=True):
         crossed = [rel for rel in self.ana_relations if rel.typecoupl == CROSSED
                    and rel.relation[1].index > rel.relation[0].index
                    and rel.relation[0].category != COUPLED
@@ -717,6 +717,31 @@ class AnaDataset:
         return [list(tup) for tup in 
                 sorted(sorted(list({tuple(sorted(prt)) for prt in partit})), 
                        key=len, reverse=True)]
+
+    def field_partition(self, mode='field', partition=None, distributed=True):
+        if not partition:
+            partitions = self.partitions(distributed=distributed)
+            if not partitions: 
+                return {'primary':[], 'secondary':[], 'variable':[]}
+            partition = partitions[0]
+        secondary = []
+        for field in partition:
+            self._add_child(field, secondary)
+        variable = [fld for fld in self.fields if not fld in partition + secondary]
+        if mode == 'id': 
+            return {'primary': [fld.idfield for fld in partition], 
+                    'secondary': [fld.idfield for fld in secondary], 
+                    'variable': [fld.idfield for fld in variable]}    
+        if mode == 'index': 
+            return {'primary': [fld.index for fld in partition], 
+                    'secondary': [fld.index for fld in secondary], 
+                    'variable': [fld.index for fld in variable]}
+        return {'primary': partition, 'secondary':secondary, 'variable': variable}
+        
+    def _add_child(self, field, childs):        
+        for rel in field.list_c_derived + field.list_coupled:
+            childs.append(rel.relation[1])
+            self._add_child(rel.relation[1], childs)
          
 class Util:
     
