@@ -120,7 +120,7 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
                           'typecodec': 'complete'})        
         self.assertEqual(i2i1.to_dict(relation=True), 
                          {'dist': 3, 'relation': ['i2', 'i1'], 'typecoupl': 'derived'})
-        self.assertEqual(i2i1.to_dict(relation=True, distance=True), 
+        self.assertEqual(i2i1.to_dict(relation=True, distances=True), 
                          {'dist': 3, 'relation': ['i2', 'i1'], 'typecoupl': 'derived',
                           'distance': 1, 'distomin': 0, 'distomax': 3, 'ratecpl': 0.25, 'rateder': 0.0})
         self.assertEqual(i2i1.to_dict(full=True), 

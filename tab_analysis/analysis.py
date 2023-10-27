@@ -98,8 +98,16 @@ class AnaField:
         '''Creation mode :
             - single dict attribute where keys are attributes name,
             - single AnaField attribute to make a copy
-            - multiple attributes '''
-                
+            - multiple attributes 
+
+         *Parameters (multiple attributes)*
+
+        - **idfield** : string or integer - Id of the Field      
+        - **lencodec** : integer (default None) - length of the codec
+        - **mincodec** : integer (default None) - number of different values
+        - **maxcodec** : integer (default None) - length of the field
+        - **hashf** : string (default None) - update identifier
+        '''        
         if isinstance(idfield, dict):
             self.idfield = idfield.get(IDFIELD, None)
             self.lencodec = idfield.get(LENCODEC, None)
@@ -143,12 +151,12 @@ class AnaField:
         return hash(self) < hash(other)
     
     def __hash__(self):
-        '''return hash (attributes)'''
+        '''return hash value (sum of attributes hash)'''
         return hash(self.idfield) + hash(self.lencodec) + hash(self.mincodec) \
              + hash(self.maxcodec) + hash(self.hashf) 
     
     def __str__(self):
-        '''dict with the attributes'''
+        '''json-text build with the attributes dict'''
         return json.dumps(self.to_dict(idfield=True))
 
     def __copy__(self):
@@ -164,7 +172,6 @@ class AnaField:
         - **idfield** : boolean (default False) - if True, idfield is included    
         - **notnone** : boolean (default True) - if True, None values are not included    
         '''        
-        
         dic = {LENCODEC: self.lencodec, MINCODEC: self.mincodec, 
                MAXCODEC: self.maxcodec, HASHF: self.hashf}
         if idfield or full:
@@ -179,34 +186,36 @@ class AnaField:
 
     @property
     def iscomplete(self):
-        '''dynamic boolean attribute : True if all attributes are present'''
+        '''return boolean indicator : True if all attributes are present'''
         return not self.maxcodec is None and not self.mincodec is None
     
     @property
     def ratecodec(self):
-        '''dynamic float ratecodec attribute'''
+        '''return float ratecodec indicator'''
         if self.iscomplete and self.maxcodec - self.mincodec:
             return (self.maxcodec - self.lencodec) / (self.maxcodec - self.mincodec)
         return None
 
     @property
     def dmincodec(self):
-        '''dynamic integer dmincodec attribute'''
+        '''return integer dmincodec indicator'''
         return self.lencodec - self.mincodec if self.iscomplete else None
     
     @property
     def dmaxcodec(self):
-        '''dynamic integer dmaxcodec attribute'''
+        '''return integer dmaxcodec indicator'''
         return self.maxcodec - self.lencodec if self.iscomplete else None
     
     @property
     def rancodec(self):
-        '''dynamic integer rancodec attribute'''
+        '''return integer rancodec indicator'''
         return self.maxcodec - self.mincodec if self.iscomplete else None
 
     @property
     def typecodec(self):
-        '''dynamic string typecodec (null, unique, complete, full, default) attribute'''
+        '''return string typecodec indicator 
+        (null, unique, complete, full, default, mixed) 
+        '''
         if self.maxcodec is None or self.mincodec is None:
             return None
         if self.maxcodec == 0:
@@ -228,11 +237,13 @@ class AnaRelation:
 
     - **relation** : List of the two fields involved in the relationship
     - **dist** : value of the relationship
-    - **hashr**: integer - hash value to identify modifications
+    - **distrib** : boolean True if values are distributed
+    - **hashr**: integer - hash value to identify update
 
     *dynamic values (@property)*
     
     - `id_relation`
+    - `index_relation`
     - `dmax`
     - `dmin`
     - `diff`
@@ -249,14 +260,22 @@ class AnaRelation:
     - `to_dict`    
     '''    
     
-    def __init__(self, relation, dist, hashr=None):
-        '''Creation with class attributes'''
+    def __init__(self, relation, dists, hashr=None):
+        '''Constructor of the relationship :
+
+         *Parameters*
+
+        - **relation** : List of the two fields involved in the relationship      
+        - **dists** : dist value or list of dist value and distrib boolean
+        - **distrib** : boolean True if values are distributed
+        - **hashr**: integer - hash value to identify update
+        '''
         self.relation = relation
-        if isinstance(dist, list): 
-            self.dist = dist[0]
-            self.distrib = dist[1]
+        if isinstance(dists, list): 
+            self.dist = dists[0]
+            self.distrib = dists[1]
         else:
-            self.dist = dist
+            self.dist = dists
             self.distrib = None
         self.hashr = hashr
 
@@ -265,6 +284,7 @@ class AnaRelation:
         return self.__class__.__name__ + '(' + str(self.id_relation) + ')'
     
     def __str__(self):
+        '''json-text build with the attributes dict'''
         return json.dumps(self.to_dict(relation=True))
 
     def __eq__(self, other):
@@ -278,19 +298,25 @@ class AnaRelation:
         return hash(self) < hash(other)
     
     def __hash__(self):
-        '''return hash(values)'''
+        '''return hash value (sum of attributes hash)'''
         return hash(self.relation[0]) + hash(self.relation[1]) + \
                hash(self.dist) + hash(self.hashr) + hash(self.distrib)
                
-    def to_dict(self, distance=False, full=False, relation=False, notnone=True):
-        if self.distrib is None:
-            dic = {DIST: self.dist, HASHR: self.hashr} 
-        else:
-            dic = {DIST: [self.dist, self.distrib], HASHR: self.hashr}             
+    def to_dict(self, distances=False, full=False, relation=False, notnone=True):
+        '''return a dict with AnaRelation attributes.
+
+         *Parameters*
+
+        - **distances** : boolean (default False) - if True, distances indicators are included       
+        - **full** : boolean (default False) - if True, all the attributes are included       
+        - **relation** : boolean (default False) - if True, idfield are included    
+        - **notnone** : boolean (default True) - if True, None values are not included    
+        '''        
+        dic = {DIST: self.dist, HASHR: self.hashr} 
         if relation or full:
             dic[RELATION] = self.id_relation
             dic[TYPECOUPL] = self.typecoupl
-        if distance or full:
+        if distances or full:
             dic |= {DISTANCE: self.distance, DISTOMIN: self.distomin,
                     DISTOMAX: self.distomax, DISTRIBUTED: self.distrib, 
                     RATECPL: self.ratecpl, RATEDER: self.rateder}
@@ -303,54 +329,66 @@ class AnaRelation:
     
     @property
     def id_relation(self):
+        '''return a list with the id of the two fields involved'''
         if self.relation:
             return [fld.idfield for fld in self.relation]
         return []
     
     @property
     def index_relation(self):
+        '''return a list with the index of the two fields involved'''
         if self.relation:
             return [fld.index for fld in self.relation]
         return []
 
     @property 
     def dmax(self):
+        '''return integer dmax indicator'''
         return self.relation[0].lencodec * self.relation[1].lencodec
 
     @property 
     def dmin(self):
+        '''return integer dmin indicator'''
         return max(self.relation[0].lencodec, self.relation[1].lencodec)
 
     @property 
     def diff(self):
+        '''return integer diff indicator'''
         return abs(self.relation[0].lencodec - self.relation[1].lencodec)
 
     @property 
     def dran(self):
+        '''return integer dran indicator'''
         return self.dmax - self.dmin
 
     @property 
     def distomin(self):
+        '''return integer distomin indicator'''
         return self.dist - self.dmin
     
     @property 
     def distomax(self):
+        '''return integer distomax indicator'''
         return self.dmax - self.dist
 
     @property 
     def distance(self):
+        '''return integer distance indicator'''
         return self.distomin + self.diff
 
     @property 
     def ratecpl(self):
+        '''return float ratecpl indicator'''
         return self.distance / (self.distance + self.distomax)
 
     @property 
     def rateder(self):
+        '''return float rateder indicator'''
         return self.distomin / self.dran
 
     @property
     def typecoupl(self):
+        '''return relationship type (coupled, derived, crossed, linked)'''
         if self.distance == 0:
             return COUPLED
         if self.distomin == 0:
@@ -365,7 +403,7 @@ class AnaDfield(AnaField):
     *Attributes* :
 
     - **dataset** : AnaDataset object where AnaDfield is included
-    - **AnaField attributes** : inheritance of AnaField
+    - **AnaField attributes** : inheritance of AnaField object
 
     *dynamic values (@property)*
     
@@ -383,10 +421,10 @@ class AnaDfield(AnaField):
     *instance methods*
     
     - `list_parents`
-    - `dic_noeud`
-    
+    - `dic_noeud`    
     '''    
     def __new__(cls, other, dataset=None):
+        '''initialization of attributes'''
         if isinstance(other, AnaDfield):
             new = AnaDfield.__copy__(other)
             return new
@@ -397,10 +435,17 @@ class AnaDfield(AnaField):
         return object.__new__(cls)
 
     def __init__(self, other, dataset):
+        '''AnaDfield is created by adding a AnaDataset link to an AnaField object.
+        
+         *Parameters*
+
+        - **other** : AnaField or AnaDfield to initialize attributes      
+        - **dataset** : AnaDataset which includes the AnaDfield
+        ''' 
         self.dataset = dataset   
 
     def __eq__(self, other):
-        ''' equal if class and values are equal'''
+        '''equal if class and values are equal'''
         return super().__eq__(other)
 
     def __hash__(self):
@@ -413,22 +458,27 @@ class AnaDfield(AnaField):
     
     @property 
     def index(self):
+        '''return the row of the field in the AnaDataset'''
         return self.dataset.fields.index(self)
         
     @property 
     def fields(self):
+        '''return the list of the fields included in the AnaDataset'''
         return self.dataset.fields
     
     @property 
     def list_relations(self):
+        '''return the list of the relations with the AnaDfield'''
         return list(self.dataset.relations[self].values())
 
     @property 
     def list_p_derived(self):
+        '''return the list of the relations with the derived parent AnaDfield'''
         return [rel for rel in self.list_relations if rel.typecoupl == DERIVED
                        and rel.relation[1].lencodec > self.lencodec]
     @property 
     def list_c_derived(self):
+        '''return the list of the relations with the child parent AnaDfield'''
         return [rel for rel in self.list_relations if rel.typecoupl == DERIVED
                        and rel.relation[1].lencodec < self.lencodec]
     @property 
