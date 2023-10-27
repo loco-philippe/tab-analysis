@@ -186,11 +186,33 @@ class Test_AnaDataset(unittest.TestCase):
                      'location': 	["fr", "gb", "es", "ch", "gb", "fr", "es", "ch"]}
         ilm = Sdataset.ntv(fruits) 
         self.assertEqual(ilm.analysis.getpartition(), [[0, 7], [1, 2], [6, 7], [5]])
+        
+        ilm = Cdataset.from_ntv(fruits)
         ana = AnaDataset(ilm.analys(True))
         self.assertEqual(ana.partition('index'), [[0, 7], [1, 2], [6, 7], [5]])
         ana = AnaDataset(ilm.analys())
         self.assertEqual(ana.partition('index', distributed=False), [[0, 1, 6], [0, 7], [1, 2], [6, 7], [5]])
-            
+
+    def test_primary(self):
+        ilm = Cdataset.from_ntv([['math', 'english', 'software', 'math', 'english', 'software'],
+                          ['philippe', 'philippe', 'philippe', 'anne', 'anne', 'anne'],
+                          [None, None, None, 'gr1', 'gr1', 'gr2'],
+                          ['philippe white', 'philippe white', 'philippe white',
+                           'anne white', 'anne white', 'anne white']])
+        self.assertEqual(AnaDataset(ilm.analys(True)).partition('index')[0], [0, 1])
+        """ilm = Dataset.obj([['ext', ['er', 'rt', 'er', 'ry'], -1], [0, 2, 0, 2], [30, 12, 12, 15],
+                     [2, 0, 2, 0], [2, 2, 0, 0], ['info', 'info', 'info', 'info'], [12, 12, 15, 30]])
+        self.assertEqual(ilm.primary, [0, 1, 5])
+        ilm = Dataset.obj([['ext', ['er', 'rt', 'er', 'ry'], -1], [0, 2, 0, 2], [30, 12, 20, 30],
+                     [2, 0, 2, 0], [2, 2, 0, 0], ['info', 'info', 'info', 'info'], [12, 20, 20, 12]])
+        self.assertEqual(ilm.primary, [0, 1, 3])
+        ilm = Dataset.ext([[0, 2, 0, 2], [30, 12, 12, 15], [2, 0, 2, 0], [2, 2, 0, 0],
+                          ['info', 'info', 'info', 'info'], [12, 12, 15, 30]])
+        self.assertEqual(ilm.primary, [0, 1, 5])
+        ilm = Dataset.ext([[0, 2, 0, 2], [30, 12, 20, 30], [2, 0, 2, 0], [2, 2, 0, 0],
+                          ['info', 'info', 'info', 'info'], [12, 20, 20, 12]])
+        self.assertEqual(ilm.primary, [0, 1, 3])           """
+        
 if __name__ == '__main__':
     
     unittest.main(verbosity=2)

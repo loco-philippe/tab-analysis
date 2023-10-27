@@ -138,6 +138,10 @@ class AnaField:
             self.mincodec == other.mincodec and self.maxcodec == other.maxcodec and \
             self.hashf == other.hashf
 
+    def __lt__(self, other):
+        ''' return a comparison between hash value'''
+        return hash(self) < hash(other)
+    
     def __hash__(self):
         '''return hash (attributes)'''
         return hash(self.idfield) + hash(self.lencodec) + hash(self.mincodec) \
@@ -269,6 +273,10 @@ class AnaRelation:
             self.relation == other.relation and self.dist == other.dist and \
             self.hashr == other.hashr and self.distrib == other.distrib
 
+    def __lt__(self, other):
+        ''' return a comparison between hash value'''
+        return hash(self) < hash(other)
+    
     def __hash__(self):
         '''return hash(values)'''
         return hash(self.relation[0]) + hash(self.relation[1]) + \
@@ -632,16 +640,16 @@ class AnaDataset:
             return []
         partit = [[fld] for fld in self.fields if fld.category == ROOTED]
         if len(crossed) == 1 and crossed[0].dist == len(self):
-            partit.insert(0, [crossed[0].relation])
-            return partit
-        for repeat in list(range(len(crossed))):
-            candidates = combinations(crossed, repeat + 1)
-            for candidat in candidates:
-                flds = list(set([rel.relation[i] for rel in candidat for i in [0,1]]))
-                if (reduce(mul,[fld.lencodec for fld in flds]) == len(self) and
-                    len(candidat) == sum(range(len(flds))) and 
-                    (not distributed or min([rel.distrib for rel in candidat]))):
-                    partit.insert(0, flds)
+            partit.insert(0, crossed[0].relation)
+        else:
+            for repeat in list(range(len(crossed))):
+                candidates = combinations(crossed, repeat + 1)
+                for candidat in candidates:
+                    flds = list(set([rel.relation[i] for rel in candidat for i in [0,1]]))
+                    if (reduce(mul,[fld.lencodec for fld in flds]) == len(self) and
+                        len(candidat) == sum(range(len(flds))) and 
+                        (not distributed or min([rel.distrib for rel in candidat]))):
+                        partit.insert(0, flds)
         for ind in range(len(partit)):
             if mode == 'id':
                 partit[ind] = [fld.idfield for fld in partit[ind]]
@@ -650,8 +658,7 @@ class AnaDataset:
         return [list(tup) for tup in 
                 sorted(sorted(list({tuple(sorted(prt)) for prt in partit})), 
                        key=len, reverse=True)]
-        
-    
+         
 class Util:
     
     @staticmethod 
