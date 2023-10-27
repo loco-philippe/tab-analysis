@@ -199,19 +199,29 @@ class Test_AnaDataset(unittest.TestCase):
                           [None, None, None, 'gr1', 'gr1', 'gr2'],
                           ['philippe white', 'philippe white', 'philippe white',
                            'anne white', 'anne white', 'anne white']])
-        self.assertEqual(AnaDataset(ilm.analys(True)).partition('index')[0], [0, 1])
-        """ilm = Dataset.obj([['ext', ['er', 'rt', 'er', 'ry'], -1], [0, 2, 0, 2], [30, 12, 12, 15],
+        ana = AnaDataset(ilm.analys(True))
+        self.assertEqual(ana.partition('index')[0], [0, 1])
+        self.assertEqual(ana.dimension, 2)
+        
+        ilm = Cdataset.from_ntv([['er', 'rt', 'er', 'ry'], [0, 2, 0, 2], [30, 12, 12, 15],
                      [2, 0, 2, 0], [2, 2, 0, 0], ['info', 'info', 'info', 'info'], [12, 12, 15, 30]])
-        self.assertEqual(ilm.primary, [0, 1, 5])
-        ilm = Dataset.obj([['ext', ['er', 'rt', 'er', 'ry'], -1], [0, 2, 0, 2], [30, 12, 20, 30],
+        ana = AnaDataset(ilm.analys(True))
+        self.assertEqual(ana.partition('index')[0], [1, 4])
+        
+        ilm = Cdataset.from_ntv([['er', 'rt', 'er', 'ry'], [0, 2, 0, 2], [30, 12, 20, 30],
                      [2, 0, 2, 0], [2, 2, 0, 0], ['info', 'info', 'info', 'info'], [12, 20, 20, 12]])
-        self.assertEqual(ilm.primary, [0, 1, 3])
-        ilm = Dataset.ext([[0, 2, 0, 2], [30, 12, 12, 15], [2, 0, 2, 0], [2, 2, 0, 0],
+        ana = AnaDataset(ilm.analys(True))
+        self.assertEqual(ana.partition('index')[0], [1, 4])
+        
+        ilm = Cdataset.from_ntv([[0, 2, 0, 2], [30, 12, 12, 15], [2, 0, 2, 0], [2, 2, 0, 0],
                           ['info', 'info', 'info', 'info'], [12, 12, 15, 30]])
-        self.assertEqual(ilm.primary, [0, 1, 5])
-        ilm = Dataset.ext([[0, 2, 0, 2], [30, 12, 20, 30], [2, 0, 2, 0], [2, 2, 0, 0],
+        ana = AnaDataset(ilm.analys(True))
+        self.assertEqual(ana.partition('index')[0], [0, 3])
+        
+        ilm = Cdataset.from_ntv([[0, 2, 0, 2], [30, 12, 20, 30], [2, 0, 2, 0], [2, 2, 0, 0],
                           ['info', 'info', 'info', 'info'], [12, 20, 20, 12]])
-        self.assertEqual(ilm.primary, [0, 1, 3])           """
+        ana = AnaDataset(ilm.analys(True))
+        self.assertEqual(ana.partition('index')[0], [0, 3])        
         
 if __name__ == '__main__':
     

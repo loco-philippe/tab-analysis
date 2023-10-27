@@ -595,6 +595,15 @@ class AnaDataset:
         len_self = len(self)
         return AnaDfield(AnaField(ROOT, len_self, len_self, len_self), self)
 
+    @property 
+    def primary(self):
+        part = self.partition()
+        return part[0] if part else []
+
+    @property 
+    def dimension(self):
+        return len(self.primary)
+    
     def dfield(self, fld):
         '''return the AnaDfield matching with fld. Fld is a Str or a AnaField'''
         if isinstance(fld, AnaDfield):
