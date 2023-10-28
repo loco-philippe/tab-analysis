@@ -421,7 +421,7 @@ class AnaDfield(AnaField):
     - `dic_inner_node`    
     '''    
     def __new__(cls, other, dataset=None):
-        '''initialization of attributes'''
+        '''initialization of attributes from "other"'''
         if isinstance(other, AnaDfield):
             new = AnaDfield.__copy__(other)
             return new
@@ -460,6 +460,8 @@ class AnaDfield(AnaField):
     @property 
     def index(self):
         '''return the row of the field in the AnaDataset'''
+        if self == self.dataset.root:
+            return -1
         return self.dataset.fields.index(self)
         
     @property 
@@ -474,24 +476,27 @@ class AnaDfield(AnaField):
 
     @property 
     def list_p_derived(self):
-        '''return the list of the relations with the derived parent AnaDfield'''
+        '''return the list of the derived relations with the parents of AnaDfield'''
         return [rel for rel in self.list_relations if rel.typecoupl == DERIVED
                        and rel.relation[1].lencodec > self.lencodec]
     @property 
     def list_c_derived(self):
-        '''return the list of the relations with the child parent AnaDfield'''
+        '''return the list of the derived relations with the childs of AnaDfield'''
         return [rel for rel in self.list_relations if rel.typecoupl == DERIVED
                        and rel.relation[1].lencodec < self.lencodec]
     @property 
     def list_coupled(self):
+        '''return the list of the coupled relations with the AnaDfield'''
         return [rel for rel in self.list_relations if rel.typecoupl == COUPLED]
 
     @property 
     def dist_root(self):
+        '''return the distance to the root field'''
         return len(self.dataset) - self.lencodec
 
     @property 
     def category(self):
+        '''return AnaDfield category (unique, rooted, coupled, derived, mixed)'''
         if self.typecodec == UNIQUE:
             return UNIQUE 
         if self.typecodec in (COMPLETE, FULL):
@@ -505,6 +510,7 @@ class AnaDfield(AnaField):
 
     @property 
     def p_derived(self):
+        '''return the derived parent of the AnaDfield'''
         if self.category in (UNIQUE, ROOTED, ROOTDERIVED):
             return self.dataset.root
         if self.category == COUPLED:
@@ -517,10 +523,11 @@ class AnaDfield(AnaField):
                     return self.dataset.root
                 if rel.relation[1].category in (MIXED, ROOTDERIVED):
                     return rel.relation[1]
-        return 'erreur'
+        return self.dataset.root
 
     @property 
     def p_distance(self):
+        '''return the parent with minimal distance of the AnaDfield'''
         if self.category in (UNIQUE, ROOTED, COUPLED):
             return self.p_derived
         dist_up = [rel.distance for rel in self.list_relations
@@ -535,6 +542,18 @@ class AnaDfield(AnaField):
         return [fld for fld in list_dmin if fld.lencodec == max_lencodec][0]
 
     def list_parents(self, typeparent='derived', mode='field'):
+        ''' return the list of the AnaDfield's parents in the family tree up to 
+        the root AnaDfield.
+        
+         *Parameters*
+
+        - **typeparent** : str (default 'derived') - 'derived' or 'distance'       
+        - **mode** : str (default 'field') - AnaDfield representation 
+        ('field', 'id', 'index')     
+        
+        *Returns* : list of parents from closest to the most distant. Parents
+        are represented with index, idfield, or object
+        '''
         parent = self
         listparent = []
         while parent != self.dataset.root:
@@ -543,22 +562,18 @@ class AnaDfield(AnaField):
                 listparent.append(parent)
         return Util.view(listparent, mode)
 
-    def dic_node(self, mode, lname):
-        '''generate a dict with nodes data '''
-        if self == self.dataset.root:
-            lis = ['root-' + mode + '*(' + str(self.lencodec) + ')']
-            if mode == 'distance':
-                childs = [fld for fld in self.fields 
-                          if fld.p_distance == self.dataset.root]
-            elif mode == 'derived':
-                childs = [fld for fld in self.fields 
-                          if fld.p_derived == self.dataset.root]
-            for fld in childs:
-                lis.append(fld.dic_inner_node(mode, lname))
-            return {str(-1).ljust(2, '*'): lis}
-        return self.dic_inner_node(mode, lname)
-
     def dic_inner_node(self, mode, lname): 
+        '''return a child AnaDfield tree.
+
+         *Parameters*
+
+        - **lname** : integer - maximal length of the names       
+        - **mode** : str (default 'field') - AnaDfield representation 
+        ('field', 'id', 'index')     
+        
+        *Returns* : dict where key is a AnaDfield and value is the list of 
+        the childs.
+        '''
         adding = ''
         if mode == 'distance':
             rel_parent = self.dataset.get_relation(self, self.p_distance)
@@ -586,9 +601,47 @@ class AnaDfield(AnaField):
         return {str(self.index).ljust(2, '*'): lis}        
     
 class AnaDataset:
+    '''This class analyses the structure of a dataset.
+
+    *Attributes* :
+
+    - **iddataset** : string or integer - Id of the Dataset      
+    - **fields** : list of the AnaDfields included
+    - **relations** : dict of the AnaRelations between two AnaDfields
+    - **hashd** : string - update identifier
+
+    *dynamic values (@property)*
+    
+    - `ana_relations`
+    - `root`
+    - `primary`
+    - `dimension`
+    
+    *instance methods*
+    
+    - `set_relations`
+    - `get_relation`    
+    - `dfield`    
+    - `tree`    
+    - `partitions`    
+    - `field_partition`    
+    '''    
 
     def __init__(self, fields=None, relations=None, iddataset=None, 
                  leng=None, hashd=None):
+        '''Creation mode :
+            - single dict attribute where keys are attributes name,
+            - single AnaDataset attribute to make a copy
+            - multiple attributes 
+
+         *Parameters (multiple attributes)*
+
+        - **idfield** : string or integer - Id of the Field      
+        - **lencodec** : integer (default None) - length of the codec
+        - **mincodec** : integer (default None) - number of different values
+        - **maxcodec** : integer (default None) - length of the field
+        - **hashf** : string (default None) - update identifier
+        '''        
         if isinstance(fields, AnaDataset):
             self.iddataset = fields.iddataset
             self.fields = fields.fields
@@ -626,20 +679,6 @@ class AnaDataset:
         return hash(self.iddataset) + sum([hash(fld) for fld in self.fields]) + \
                sum([hash(rel) for rel in self.relations]) + hash(self.hashd)
              
-    def set_relations(self, field, dic_relations):
-        fld = self.dfield(field)
-        for other, dist in dic_relations.items():
-            oth = self.dfield(other)
-            self.relations[fld][oth] = AnaRelation([fld, oth], dist)
-            self.relations[oth][fld] = AnaRelation([oth, fld], dist)
-
-    def get_relation(self, fld1, fld2):
-        fl1 = self.dfield(fld1)
-        fl2 = self.dfield(fld2)
-        if self.root in [fl1, fl2]:
-            return AnaRelation([fl1, fl2], len(self))
-        return self.relations[self.dfield(fld1)][self.dfield(fld2)]
-            
     @property 
     def ana_relations(self):
         return [rel for fldrel in self.relations.values() for rel in fldrel.values()]
@@ -658,6 +697,20 @@ class AnaDataset:
     def dimension(self):
         return len(self.primary)
     
+    def set_relations(self, field, dic_relations):
+        fld = self.dfield(field)
+        for other, dist in dic_relations.items():
+            oth = self.dfield(other)
+            self.relations[fld][oth] = AnaRelation([fld, oth], dist)
+            self.relations[oth][fld] = AnaRelation([oth, fld], dist)
+
+    def get_relation(self, fld1, fld2):
+        fl1 = self.dfield(fld1)
+        fl2 = self.dfield(fld2)
+        if self.root in [fl1, fl2]:
+            return AnaRelation([fl1, fl2], len(self))
+        return self.relations[self.dfield(fld1)][self.dfield(fld2)]
+            
     def dfield(self, fld):
         '''return the AnaDfield matching with fld. Fld is a Str or a AnaField'''
         if isinstance(fld, AnaDfield):
@@ -680,7 +733,14 @@ class AnaDataset:
             'derived' : derived tree
             'distance': min distance tree
         '''
-        tree = self.root.dic_node(mode, lname)
+        lis = ['root-' + mode + '*(' + str(len(self)) + ')']
+        if mode == 'distance':
+            childs = [fld for fld in self.fields if fld.p_distance == self.root]
+        elif mode == 'derived':
+            childs = [fld for fld in self.fields if fld.p_derived == self.root]
+        for fld in childs:
+            lis.append(fld.dic_inner_node(mode, lname))
+        tree = {str(-1).ljust(2, '*'): lis}
         if string:
             tre = pprint.pformat(tree, indent=0, width=width)
             tre = tre.replace('---', ' - ')
@@ -690,7 +750,6 @@ class AnaDataset:
                 tre = tre.replace(car, "")
             return tre
         return Util.clean_dic(tree, '*', ' ')
-
 
     def partitions(self, mode='field', distributed=True):
         crossed = [rel for rel in self.ana_relations if rel.typecoupl == CROSSED
@@ -714,9 +773,8 @@ class AnaDataset:
                         (not distributed or min([rel.distrib for rel in candidat]))):
                         partit.insert(0, flds)
         partit = Util.view(partit, mode)
-        return [list(tup) for tup in 
-                sorted(sorted(list({tuple(sorted(prt)) for prt in partit})), 
-                       key=len, reverse=True)]
+        return [list(tup) for tup in sorted(sorted(list({tuple(sorted(prt))
+                          for prt in partit})), key=len, reverse=True)]
 
     def field_partition(self, mode='field', partition=None, distributed=True):
         if not partition:
