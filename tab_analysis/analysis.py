@@ -666,6 +666,7 @@ class AnaDataset:
         self.hashd = hashd
             
     def __len__(self):
+        '''length of the AnaDataset (len of the AnaDfields included)'''
         return max([len(fld) for fld in self.fields])
 
     def __eq__(self, other):
@@ -675,29 +676,41 @@ class AnaDataset:
             self.iddataset == other.iddataset and self.hashd == other.hashd
 
     def __hash__(self):
-        '''return hash(values)'''
+        '''return hash value (sum of attributes hash)'''
         return hash(self.iddataset) + sum([hash(fld) for fld in self.fields]) + \
                sum([hash(rel) for rel in self.relations]) + hash(self.hashd)
              
     @property 
     def ana_relations(self):
+        '''return the list of AnaRelation included'''
         return [rel for fldrel in self.relations.values() for rel in fldrel.values()]
 
     @property 
     def root(self):
+        '''return the root AnaDfield'''
         len_self = len(self)
         return AnaDfield(AnaField(ROOT, len_self, len_self, len_self), self)
 
     @property 
     def primary(self):
+        '''return the first partition of the partitions'''
         part = self.partitions()
         return part[0] if part else []
 
     @property 
     def dimension(self):
+        '''return the highest partition lenght'''
         return len(self.primary)
     
     def set_relations(self, field, dic_relations):
+        '''Add relations in the AnaDataset from a dict.
+
+         *Parameters*
+
+        - **field** : AnaDfield, AnaField or str (idfield) - first relation AnaDfield  
+        - **dic_relations** : dict - key is the second relation AnaDfield and 
+        value is the dist value or teh list [dist, distrib]
+        '''
         fld = self.dfield(field)
         for other, dist in dic_relations.items():
             oth = self.dfield(other)
@@ -705,6 +718,13 @@ class AnaDataset:
             self.relations[oth][fld] = AnaRelation([oth, fld], dist)
 
     def get_relation(self, fld1, fld2):
+        '''Return AnaRelation between fld1 and fld2.
+
+         *Parameters*
+
+        - **fld1** : AnaDfield, AnaField or str (idfield) - first relation AnaDfield  
+        - **fld2** : AnaDfield, AnaField or str (idfield) - second relation AnaDfield  
+        '''
         fl1 = self.dfield(fld1)
         fl2 = self.dfield(fld2)
         if self.root in [fl1, fl2]:
@@ -712,7 +732,7 @@ class AnaDataset:
         return self.relations[self.dfield(fld1)][self.dfield(fld2)]
             
     def dfield(self, fld):
-        '''return the AnaDfield matching with fld. Fld is a Str or a AnaField'''
+        '''return the AnaDfield matching with fld. Fld is str, AnaDfield or AnaField'''
         if isinstance(fld, AnaDfield):
             return fld
         if isinstance(fld, str):
@@ -728,7 +748,7 @@ class AnaDataset:
 
         - **lname** : integer (default 20) - length of the names        
         - **width** : integer (default 5) - length of the lines     
-        - **string** : boolean (default True) - if True return String else return dict
+        - **string** : boolean (default True) - if True return str else return dict
         - **mode** : string (default 'derived') - kind of tree :
             'derived' : derived tree
             'distance': min distance tree
@@ -752,6 +772,14 @@ class AnaDataset:
         return Util.clean_dic(tree, '*', ' ')
 
     def partitions(self, mode='field', distributed=True):
+        '''return a list of available partitions (the first is highest).
+
+         *Parameters*
+
+        - **mode** : str (default 'field') - AnaDfield representation 
+        ('field', 'id', 'index')    
+        - **distributed** : boolean (default True) - Include only distributed fields        
+        '''
         crossed = [rel for rel in self.ana_relations if rel.typecoupl == CROSSED
                    and rel.relation[1].index > rel.relation[0].index
                    and rel.relation[0].category != COUPLED
@@ -777,6 +805,15 @@ class AnaDataset:
                           for prt in partit})), key=len, reverse=True)]
 
     def field_partition(self, mode='field', partition=None, distributed=True):
+        '''return a partition dict with the list of primary, secondary and variable fields.
+
+         *Parameters*
+
+        - **mode** : str (default 'field') - AnaDfield representation 
+        ('field', 'id', 'index')    
+        - **partition** : list (default None) - if None, partition is the first 
+        - **distributed** : boolean (default True) - Include only distributed fields        
+        '''       
         if not partition:
             partitions = self.partitions(distributed=distributed)
             if not partitions: 
@@ -790,14 +827,23 @@ class AnaDataset:
                           'variable': variable}, mode)
         
     def _add_child(self, field, childs):        
+        ''' add derived or coupled fields in the childs list'''
         for rel in field.list_c_derived + field.list_coupled:
             childs.append(rel.relation[1])
             self._add_child(rel.relation[1], childs)
          
 class Util:
+    ''' common functions for analysis package'''    
     
     @staticmethod 
     def view(field_struc, mode):
+        ''' return a representation of a AnaDfields structure (fields, id, index).
+
+         *Parameters*
+
+        - **mode** : str - AnaDfield representation ('field', 'id', 'index')    
+        - **field_struc** : list or dict - structure to represent 
+        '''
         if mode is None or mode == 'field' or not field_struc:
             return field_struc
         if isinstance(field_struc, dict):
@@ -818,10 +864,13 @@ class Util:
     
     @staticmethod 
     def reduce_dic(dic):
+        '''return a dict without empty or None values'''
         return {key: val for key, val in dic.items() if not val is None}    
 
     @staticmethod 
     def clean_dic(obj, old, new):
+        '''return a dict or list with updated strings by replacing "old" substring 
+        with "new" substring'''
         if isinstance(obj, dict):
             return {Util.clean_dic(key, old, new): Util.clean_dic(val, old, new)
                     for key, val in obj.items()}
