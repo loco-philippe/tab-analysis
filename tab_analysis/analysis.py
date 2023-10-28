@@ -12,7 +12,7 @@ This module analyses structure and relationships included in a tabular object
 - Structure of a dataset (class AnaDataset)
 
 It contains the classes `analysis.AnaField`, `analysis.AnaRelation`,
-`analysis.AnaDfield`, `analysis.AnaDataset`, `analysis.Util`, `analysis.AnalysisError`.
+`analysis.AnaDfield`, `analysis.AnaDataset`, `analysis.Util`, `analysis.AnaError`.
 
 """
 import json
@@ -123,7 +123,7 @@ class AnaField:
             self.hashf = idfield.hashf
             return
         if not lencodec or not isinstance(lencodec, int):
-            raise AnalysisError("lencodec is not correct")
+            raise AnaError("lencodec is not correct")
         self.idfield = idfield
         self.lencodec = lencodec
         self.mincodec = mincodec
@@ -880,6 +880,6 @@ class Util:
             return [Util.clean_dic(val, old, new) for val in obj]
         return obj        
 
-class AnalysisError(Exception):
+class AnaError(Exception):
     ''' Analysis Exception'''
     # pass
