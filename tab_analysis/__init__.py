@@ -8,7 +8,7 @@ Created on Oct 2023
 
 This package contains the following classes and functions:
 
-- `tab-analysis.tab_analysis.analysis` :
+- module `tab-analysis.tab_analysis.analysis` :
 
     - `tab-analysis.tab_analysis.analysis.AnaField`
     - `tab-analysis.tab_analysis.analysis.AnaRelation`
