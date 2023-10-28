@@ -417,7 +417,8 @@ class AnaDfield(AnaField):
     *instance methods*
     
     - `list_parents`
-    - `dic_noeud`    
+    - `dic_node`    
+    - `dic_inner_node`    
     '''    
     def __new__(cls, other, dataset=None):
         '''initialization of attributes'''
@@ -533,16 +534,16 @@ class AnaDfield(AnaField):
         max_lencodec = max([fld.lencodec for fld in list_dmin])
         return [fld for fld in list_dmin if fld.lencodec == max_lencodec][0]
 
-    def list_parents(self, typeparent='derived'):
+    def list_parents(self, typeparent='derived', mode='field'):
         parent = self
         listparent = []
         while parent != self.dataset.root:
             parent = parent.p_derived if typeparent == 'derived' else parent.p_distance
             if parent != self.dataset.root:
                 listparent.append(parent)
-        return listparent
+        return Util.view(listparent, mode)
 
-    def dic_noeud(self, mode, lname): # child, lname, mode):
+    def dic_node(self, mode, lname):
         '''generate a dict with nodes data '''
         if self == self.dataset.root:
             lis = ['root-' + mode + '*(' + str(self.lencodec) + ')']
@@ -553,8 +554,11 @@ class AnaDfield(AnaField):
                 childs = [fld for fld in self.fields 
                           if fld.p_derived == self.dataset.root]
             for fld in childs:
-                lis.append(fld.dic_noeud(mode, lname))
+                lis.append(fld.dic_inner_node(mode, lname))
             return {str(-1).ljust(2, '*'): lis}
+        return self.dic_inner_node(mode, lname)
+
+    def dic_inner_node(self, mode, lname): 
         adding = ''
         if mode == 'distance':
             rel_parent = self.dataset.get_relation(self, self.p_distance)
@@ -567,7 +571,7 @@ class AnaDfield(AnaField):
         lis = [name.replace(' ', '*').replace("'", '*')]
         if self.category != COUPLED:
             for rel in self.list_coupled:
-                lis.append(rel.relation[1].dic_noeud(mode, lname))            
+                lis.append(rel.relation[1].dic_inner_node(mode, lname))            
         if not self.category in (ROOTED, UNIQUE):
             if mode == 'distance':
                 childs = [rel.relation[1] for rel in self.list_relations 
@@ -578,9 +582,9 @@ class AnaDfield(AnaField):
                           if rel.relation[1].p_derived == self and 
                              rel.relation[1].category != COUPLED]
             for fld in childs:
-                lis.append(fld.dic_noeud(mode, lname))            
-        return {str(self.index).ljust(2, '*'): lis}
-        
+                lis.append(fld.dic_inner_node(mode, lname))            
+        return {str(self.index).ljust(2, '*'): lis}        
+    
 class AnaDataset:
 
     def __init__(self, fields=None, relations=None, iddataset=None, 
@@ -676,7 +680,7 @@ class AnaDataset:
             'derived' : derived tree
             'distance': min distance tree
         '''
-        tree = self.root.dic_noeud(mode, lname)
+        tree = self.root.dic_node(mode, lname)
         if string:
             tre = pprint.pformat(tree, indent=0, width=width)
             tre = tre.replace('---', ' - ')
@@ -709,11 +713,7 @@ class AnaDataset:
                         len(candidat) == sum(range(len(flds))) and 
                         (not distributed or min([rel.distrib for rel in candidat]))):
                         partit.insert(0, flds)
-        for ind in range(len(partit)):
-            if mode == 'id':
-                partit[ind] = [fld.idfield for fld in partit[ind]]
-            elif mode == 'index':
-                partit[ind] = [fld.index for fld in partit[ind]]
+        partit = Util.view(partit, mode)
         return [list(tup) for tup in 
                 sorted(sorted(list({tuple(sorted(prt)) for prt in partit})), 
                        key=len, reverse=True)]
@@ -728,15 +728,8 @@ class AnaDataset:
         for field in partition:
             self._add_child(field, secondary)
         variable = [fld for fld in self.fields if not fld in partition + secondary]
-        if mode == 'id': 
-            return {'primary': [fld.idfield for fld in partition], 
-                    'secondary': [fld.idfield for fld in secondary], 
-                    'variable': [fld.idfield for fld in variable]}    
-        if mode == 'index': 
-            return {'primary': [fld.index for fld in partition], 
-                    'secondary': [fld.index for fld in secondary], 
-                    'variable': [fld.index for fld in variable]}
-        return {'primary': partition, 'secondary':secondary, 'variable': variable}
+        return Util.view({'primary': partition, 'secondary':secondary, 
+                          'variable': variable}, mode)
         
     def _add_child(self, field, childs):        
         for rel in field.list_c_derived + field.list_coupled:
@@ -744,6 +737,26 @@ class AnaDataset:
             self._add_child(rel.relation[1], childs)
          
 class Util:
+    
+    @staticmethod 
+    def view(field_struc, mode):
+        if mode is None or mode == 'field' or not field_struc:
+            return field_struc
+        if isinstance(field_struc, dict):
+            if mode == 'id': 
+                return {key: [fld.idfield for fld in val] for key, val in field_struc.items()}
+            if mode == 'index': 
+                return {key: [fld.index for fld in val] for key, val in field_struc.items()}
+        if isinstance(field_struc, list) and isinstance(field_struc[0], list):
+            if mode == 'id': 
+                return [[fld.idfield for fld in val] for val in field_struc]
+            if mode == 'index': 
+                return [[fld.index for fld in val] for val in field_struc]
+        if isinstance(field_struc, list):
+            if mode == 'id': 
+                return [fld.idfield for fld in field_struc]
+            if mode == 'index': 
+                return [fld.index for fld in field_struc]
     
     @staticmethod 
     def reduce_dic(dic):
