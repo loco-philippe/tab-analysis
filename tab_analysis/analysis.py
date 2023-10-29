@@ -691,7 +691,7 @@ class AnaDataset:
     @property
     def primary(self):
         '''return the first partition of the partitions'''
-        part = self.partitions()
+        part = self.partitions(distributed=True)
         return part[0] if part else []
 
     @property
@@ -699,6 +699,25 @@ class AnaDataset:
         '''return the highest partition lenght'''
         return len(self.primary)
 
+    @property
+    def secondary(self):
+        '''return the derived ou coupled fields from primary'''
+        secondary = []
+        for field in self.primary:
+            self._add_child(field, secondary)
+        return [fld for fld in secondary if not fld in self.primary]
+
+    @property
+    def unique(self):
+        '''return the unique fields'''
+        return [fld for fld in self.fields if fld.category == UNIQUE]
+
+    @property
+    def variable(self):
+        '''return the variable fields'''
+        return [fld for fld in self.fields 
+                if not fld in self.primary + self.secondary + self.unique] 
+           
     def set_relations(self, field, dic_relations):
         '''Add relations in the AnaDataset from a dict.
 
@@ -777,18 +796,16 @@ class AnaDataset:
         ('field', 'id', 'index')
         - **distributed** : boolean (default True) - Include only distributed fields
         '''
+        partit = [[fld] for fld in self.fields if fld.category == ROOTED]
         crossed = [rel for rel in self.ana_relations if rel.typecoupl == CROSSED
                    and rel.relation[1].index > rel.relation[0].index
                    and rel.relation[0].category != COUPLED
                    and rel.relation[1].category != COUPLED]
         if distributed:
-            crossed = [rel for rel in crossed if rel.distrib]
-        if not crossed:
-            return []
-        partit = [[fld] for fld in self.fields if fld.category == ROOTED]
-        if len(crossed) == 1 and crossed[0].dist == len(self):
+            crossed = [rel for rel in crossed if rel.distrib]        
+        if crossed and len(crossed) == 1 and crossed[0].dist == len(self):
             partit.insert(0, crossed[0].relation)
-        else:
+        elif crossed:
             for repeat in list(range(len(crossed))):
                 candidates = combinations(crossed, repeat + 1)
                 for candidat in candidates:
@@ -822,6 +839,7 @@ class AnaDataset:
         secondary = []
         for field in partition:
             self._add_child(field, secondary)
+        secondary = [fld for fld in secondary if not fld in partition]
         unique = [fld for fld in self.fields if fld.category == UNIQUE]
         variable = [fld for fld in self.fields 
                     if not fld in partition + secondary + unique]
@@ -834,8 +852,8 @@ class AnaDataset:
             child = rel.relation[1]
             if not child in childs and not child.category == UNIQUE: 
                 childs.append(child)
-            if not child.category in (COUPLED, UNIQUE): 
-                self._add_child(child, childs)
+                if not child.category in (COUPLED, UNIQUE): 
+                    self._add_child(child, childs)
 
 
 class Util:
