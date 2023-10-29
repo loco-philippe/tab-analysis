@@ -804,7 +804,8 @@ class AnaDataset:
                        key=len, reverse=True)]
 
     def field_partition(self, mode='field', partition=None, distributed=True):
-        '''return a partition dict with the list of primary, secondary and variable fields.
+        '''return a partition dict with the list of primary, secondary, unique
+        and variable fields.
 
          *Parameters*
 
@@ -816,21 +817,25 @@ class AnaDataset:
         if not partition:
             partitions = self.partitions(distributed=distributed)
             if not partitions:
-                return {'primary': [], 'secondary': [], 'variable': []}
+                return {'primary': [], 'secondary': [], 'unique': [], 'variable': []}
             partition = partitions[0]
         secondary = []
         for field in partition:
             self._add_child(field, secondary)
-        variable = [
-            fld for fld in self.fields if not fld in partition + secondary]
+        unique = [fld for fld in self.fields if fld.category == UNIQUE]
+        variable = [fld for fld in self.fields 
+                    if not fld in partition + secondary + unique]
         return Util.view({'primary': partition, 'secondary': secondary,
-                          'variable': variable}, mode)
+                          'unique': unique, 'variable': variable}, mode)
 
     def _add_child(self, field, childs):
         ''' add derived or coupled fields in the childs list'''
         for rel in field.list_c_derived + field.list_coupled:
-            childs.append(rel.relation[1])
-            self._add_child(rel.relation[1], childs)
+            child = rel.relation[1]
+            if not child in childs and not child.category == UNIQUE: 
+                childs.append(child)
+            if not child.category in (COUPLED, UNIQUE): 
+                self._add_child(child, childs)
 
 
 class Util:

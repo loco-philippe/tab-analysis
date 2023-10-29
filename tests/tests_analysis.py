@@ -193,14 +193,21 @@ class Test_AnaDataset(unittest.TestCase):
         ana = AnaDataset(ilm.analys(True))
         self.assertEqual(ana.partitions('index'), [[0, 7], [1, 2], [6, 7], [5]])
         self.assertEqual(ana.field_partition(mode='index', distributed=False), 
-                         {'primary': [0, 1, 6], 'secondary': [], 'variable': [2, 3, 4, 5, 7]})
+                         {'primary': [0, 1, 6], 'secondary': [], 'unique': [], 'variable': [2, 3, 4, 5, 7]})
         self.assertEqual(ana.field_partition(mode='index'), 
-                         {'primary': [0, 7], 'secondary': [], 'variable': [1, 2, 3, 4, 5, 6]})
+                         {'primary': [0, 7], 'secondary': [], 'unique': [], 'variable': [1, 2, 3, 4, 5, 6]})
         self.assertEqual(ana.field_partition(mode='index', partition=ana.partitions()[1]), 
-                         {'primary': [1, 2], 'secondary': [0], 'variable': [3, 4, 5, 6, 7]})
+                         {'primary': [1, 2], 'secondary': [0], 'unique': [], 'variable': [3, 4, 5, 6, 7]})
 
 
     def test_partitions(self):
+        ilm = Sdataset.ntv([['math', 'english', 'software', 'physic', 'english', 'software'],
+                         ['philippe', 'philippe', 'philippe',
+                          'anne', 'anne', 'anne'],
+                         [None, None, None, 'gr1', 'gr1', 'gr2'],
+                         ['philippe white', 'philippe white', 'philippe white',
+                          'anne white', 'anne white', 'anne white']])
+        self.assertEqual(AnaDataset(ilm.analys(True)).partitions('index'), [])
         ilm = Cdataset.from_ntv([['math', 'english', 'software', 'math', 'english', 'software'],
                           ['philippe', 'philippe', 'philippe', 'anne', 'anne', 'anne'],
                           [None, None, None, 'gr1', 'gr1', 'gr2'],
