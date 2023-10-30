@@ -19,7 +19,7 @@ This package contains the following classes and functions:
     
     
 """
-from tab_analysis.analysis import AnaField, AnaRelation, AnaDataset, AnaDfield
+from tab_analysis.analysis import AnaField, AnaRelation, AnaDataset, AnaDfield, Util
 from tab_analysis.analysis import ROOT, ROOTED, ROOTDERIVED, DERIVED, COUPLED
 from tab_analysis.analysis import NULL, UNIQUE, COMPLETE, FULL, DEFAULT, MIXED
 
