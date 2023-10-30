@@ -47,7 +47,6 @@ DMAXCODEC = 'dmaxcodec'
 RANCODEC = 'rancodec'
 TYPECODEC = 'typecodec'
 HASHF = 'hashf'
-
 RELATION = 'relation'
 HASHR = 'hashr'
 DIST = 'dist'
@@ -55,11 +54,22 @@ DMAX = 'dmax'
 DMIN = 'dmin'
 DIFF = 'diff'
 DRAN = 'dran'
+NUM = 'num'
+CATEGORY = 'category'
+DERPARENT = 'derparent'
+DISPARENT = 'disparent'
+DISDISTANCE = 'disdistance'
+DERDISTANCE = 'derdistance'
+DISRATECPL = 'disratecpl'
+DERRATECPL = 'derratecpl'
+DISRATEDER = 'disrateder'
+DERRATEDER = 'derrateder'
 
 TYPECOUPL = 'typecoupl'
 DISTANCE = 'distance'
 DISTOMIN = 'distomin'
 DISTOMAX = 'distomax'
+DISTROOT = 'distroot'
 RATECPL = 'ratecpl'
 RATEDER = 'rateder'
 
@@ -536,6 +546,20 @@ class AnaDfield(AnaField):
         max_lencodec = max(fld.lencodec for fld in list_dmin)
         return [fld for fld in list_dmin if fld.lencodec == max_lencodec][0]
 
+    def to_dict(self, mode='field'):
+        dic = super().to_dict(full=True, notnone=False)
+        dic[DISTROOT] = self.dist_root
+        dic[NUM] = self.index
+        dic[CATEGORY] = self.category
+        dic[DERPARENT] = Util.view(self.p_derived, mode)
+        dic[DISPARENT] = Util.view(self.p_distance, mode)
+        dic[DISDISTANCE] = self.dataset.relations[self][self.p_distance].dist
+        dic[DERDISTANCE] = self.dataset.relations[self][self.p_derived].dist
+        dic[DISRATECPL] = self.dataset.relations[self][self.p_distance].ratecpl
+        dic[DERRATECPL] = self.dataset.relations[self][self.p_derived].ratecpl
+        dic[DISRATEDER] = self.dataset.relations[self][self.p_distance].rateder
+        dic[DERRATEDER] = self.dataset.relations[self][self.p_derived].rateder
+        
     def list_parents(self, typeparent='derived', mode='field'):
         ''' return the list of the AnaDfield's parents in the family tree up to
         the root AnaDfield.

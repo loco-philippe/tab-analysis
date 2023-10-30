@@ -18,50 +18,6 @@ il = Dataset.ntv([[1, 2, 3, 4, 5, 6],               root coupled
                   ['a', 'b', 'b', 'c', 'c', 'a'],   mixed
                   [20, 10, 10, 10, 10, 20],         derived from 1
                   [200, 200, 300, 200, 300, 300]])  derived from root
-il.lindex[0].infos
-{'lencodec': 6, 'mincodec': 6, 'maxcodec': 6, 'typecodec': 'complete', 'ratecodec': 0.0}
-il.lindex[1].infos
-{'lencodec': 3, 'mincodec': 3, 'maxcodec': 6, 'typecodec': 'default', 'ratecodec': 1.0}
-il.lindex[2].infos
-{'lencodec': 2, 'mincodec': 2, 'maxcodec': 6, 'typecodec': 'default', 'ratecodec': 1.0}
-il.lindex[3].infos
-{'lencodec': 2, 'mincodec': 2, 'maxcodec': 6, 'typecodec': 'default', 'ratecodec': 1.0}
-il.couplingmatrix()[0]
-[{'dist': 6,  'distmin': 6,  'distmax': 36,  'diff': 0,  'rateder': 0.0,  'disttomin': 0,  
-  'disttomax': 30,  'distance': 0,  'ratecpl': 0.0,  'typecoupl': 'coupled'},
- {'dist': 6,  'distmin': 6,  'distmax': 18,  'diff': 3,  'rateder': 0.0,  'disttomin': 0,
-  'disttomax': 12,  'distance': 3,  'ratecpl': 0.2,  'typecoupl': 'derive'},
- {'dist': 6,  'distmin': 6,  'distmax': 12,  'diff': 4,  'rateder': 0.0,  'disttomin': 0,
-  'disttomax': 6,  'distance': 4,  'ratecpl': 0.4,  'typecoupl': 'derive'},
- {'dist': 6,  'distmin': 6,  'distmax': 12,  'diff': 4,  'rateder': 0.0,  'disttomin': 0,
-  'disttomax': 6,  'distance': 4,  'ratecpl': 0.4,  'typecoupl': 'derive'}]
-il.couplingmatrix()[1]
-[{'dist': 6,  'distmin': 6,  'distmax': 18,  'diff': 3,  'rateder': 0.0,  'disttomin': 0,  
-  'disttomax': 12,  'distance': 3,  'ratecpl': 0.2,  'typecoupl': 'derived'},
- {'dist': 3,  'distmin': 3,  'distmax': 9,  'diff': 0,  'rateder': 0.0,  'disttomin': 0,
-  'disttomax': 6,  'distance': 0,  'ratecpl': 0.0,  'typecoupl': 'coupled'},
- {'dist': 3,  'distmin': 3,  'distmax': 6,  'diff': 1,  'rateder': 0.0,  'disttomin': 0,
-  'disttomax': 3,  'distance': 1,  'ratecpl': 0.25,  'typecoupl': 'derive'},
- {'dist': 6,  'distmin': 3,  'distmax': 6,  'diff': 1,  'rateder': 1.0,  'disttomin': 3,
-  'disttomax': 0,  'distance': 4,  'ratecpl': 1.0,  'typecoupl': 'crossed'}]
-il.couplingmatrix()[2]
-[{'dist': 6,  'distmin': 6,  'distmax': 12,  'diff': 4,  'rateder': 0.0,  'disttomin': 0,  
-  'disttomax': 6,  'distance': 4,  'ratecpl': 0.4,  'typecoupl': 'derived'},
- {'dist': 3,  'distmin': 3,  'distmax': 6,  'diff': 1,  'rateder': 0.0,  'disttomin': 0,
-  'disttomax': 3,  'distance': 1,  'ratecpl': 0.25,  'typecoupl': 'derived'},
- {'dist': 2,  'distmin': 2,  'distmax': 4,  'diff': 0,  'rateder': 0.0,  'disttomin': 0,
-  'disttomax': 2,  'distance': 0,  'ratecpl': 0.0,  'typecoupl': 'coupled'},
- {'dist': 4,  'distmin': 2,  'distmax': 4,  'diff': 0,  'rateder': 1.0,  'disttomin': 2,
-  'disttomax': 0,  'distance': 2,  'ratecpl': 1.0,  'typecoupl': 'crossed'}]
-il.couplingmatrix()[3]
-[{'dist': 6,  'distmin': 6,  'distmax': 12,  'diff': 4,  'rateder': 0.0,  'disttomin': 0,  
-  'disttomax': 6,  'distance': 4,  'ratecpl': 0.4,  'typecoupl': 'derived'},
- {'dist': 6,  'distmin': 3,  'distmax': 6,  'diff': 1,  'rateder': 1.0,  'disttomin': 3,
-  'disttomax': 0,  'distance': 4,  'ratecpl': 1.0,  'typecoupl': 'crossed'},
- {'dist': 4,  'distmin': 2,  'distmax': 4,  'diff': 0,  'rateder': 1.0,  'disttomin': 2,
-  'disttomax': 0,  'distance': 2,  'ratecpl': 1.0,  'typecoupl': 'crossed'},
- {'dist': 2,  'distmin': 2,  'distmax': 4,  'diff': 0,  'rateder': 0.0,  'disttomin': 0,
-  'disttomax': 2,  'distance': 0,  'ratecpl': 0.0,  'typecoupl': 'coupled'}]
 """
 i0 = AnaField('i0', 6, 6, 6)
 i1 = AnaField('i1', 3, 3, 6)
