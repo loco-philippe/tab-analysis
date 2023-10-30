@@ -487,7 +487,8 @@ class AnaDfield(AnaField):
     def list_c_derived(self):
         '''return the list of the derived relations with the childs of AnaDfield'''
         return [rel for rel in self.list_relations if rel.typecoupl == DERIVED
-                and rel.relation[1].lencodec < self.lencodec]
+                and rel.relation[1].lencodec < self.lencodec
+                and rel.relation[1].category != UNIQUE]
 
     @property
     def list_coupled(self):
@@ -521,6 +522,8 @@ class AnaDfield(AnaField):
         if self.category == COUPLED:
             return [rel.relation[1] for rel in self.list_coupled
                     if not rel.relation[1].category == COUPLED][0]
+        if not self.list_p_derived:
+            return self.dataset.root            
         distance_min = min(rel.distance for rel in self.list_p_derived)
         for rel in self.list_p_derived:
             if rel.distance == distance_min:
@@ -533,7 +536,8 @@ class AnaDfield(AnaField):
     @property
     def p_distance(self):
         '''return the parent with minimal distance of the AnaDfield'''
-        if self.category in (UNIQUE, ROOTED, COUPLED):
+        #if self.category in (UNIQUE, ROOTED, COUPLED):
+        if self.category in (ROOTED, COUPLED):
             return self.p_derived
         dist_up = [rel.distance for rel in self.list_relations
                    if rel.relation[1].lencodec >= self.lencodec
@@ -551,14 +555,25 @@ class AnaDfield(AnaField):
         dic[DISTROOT] = self.dist_root
         dic[NUM] = self.index
         dic[CATEGORY] = self.category
-        dic[DERPARENT] = Util.view(self.p_derived, mode)
         dic[DISPARENT] = Util.view(self.p_distance, mode)
-        dic[DISDISTANCE] = self.dataset.relations[self][self.p_distance].dist
-        dic[DERDISTANCE] = self.dataset.relations[self][self.p_derived].dist
-        dic[DISRATECPL] = self.dataset.relations[self][self.p_distance].ratecpl
-        dic[DERRATECPL] = self.dataset.relations[self][self.p_derived].ratecpl
-        dic[DISRATEDER] = self.dataset.relations[self][self.p_distance].rateder
-        dic[DERRATEDER] = self.dataset.relations[self][self.p_derived].rateder
+        if self.p_distance == self.dataset.root:
+            dic[DISDISTANCE] = self.dist_root
+            dic[DISRATECPL] = self.dist_root / (len(self.dataset) - 1) / self.lencodec
+            dic[DISRATEDER] = 0.0
+        else:
+            dic[DISDISTANCE] = self.dataset.relations[self][self.p_distance].distance
+            dic[DISRATECPL] = self.dataset.relations[self][self.p_distance].ratecpl
+            dic[DISRATEDER] = self.dataset.relations[self][self.p_distance].rateder
+        dic[DERPARENT] = Util.view(self.p_derived, mode)
+        if self.p_derived == self.dataset.root:
+            dic[DERDISTANCE] = self.dist_root
+            dic[DERRATECPL] = self.dist_root / (len(self.dataset) - 1) / self.lencodec
+            dic[DERRATEDER] = 0.0
+        else:
+            dic[DERDISTANCE] = self.dataset.relations[self][self.p_derived].distance
+            dic[DERRATECPL] = self.dataset.relations[self][self.p_derived].ratecpl
+            dic[DERRATEDER] = self.dataset.relations[self][self.p_derived].rateder
+        return dic
         
     def list_parents(self, typeparent='derived', mode='field'):
         ''' return the list of the AnaDfield's parents in the family tree up to
@@ -701,6 +716,11 @@ class AnaDataset:
         return hash(self.iddataset) + sum(hash(fld) for fld in self.fields) + \
             sum(hash(rel) for rel in self.relations) + hash(self.hashd)
 
+    @property
+    def category(self):
+        '''return a list of AnaDfield category (unique, rooted, coupled, derived, mixed)'''
+        return [fld.category for fld in self.fields]
+    
     @property
     def ana_relations(self):
         '''return the list of AnaRelation included'''
@@ -895,20 +915,15 @@ class Util:
         if mode is None or mode == 'field' or not field_struc:
             return field_struc
         if isinstance(field_struc, dict):
-            if mode == 'id':
-                return {key: [fld.idfield for fld in val] for key, val in field_struc.items()}
-            if mode == 'index':
-                return {key: [fld.index for fld in val] for key, val in field_struc.items()}
+            return {key: [fld.idfield if mode == 'id' else fld.index for fld in val] 
+                    for key, val in field_struc.items()}
         if isinstance(field_struc, list) and isinstance(field_struc[0], list):
-            if mode == 'id':
-                return [[fld.idfield for fld in val] for val in field_struc]
-            if mode == 'index':
-                return [[fld.index for fld in val] for val in field_struc]
+            return [[fld.idfield if mode == 'id' else fld.index for fld in val] 
+                    for val in field_struc]
         if isinstance(field_struc, list):
-            if mode == 'id':
-                return [fld.idfield for fld in field_struc]
-            if mode == 'index':
-                return [fld.index for fld in field_struc]
+            return [fld.idfield if mode == 'id' else fld.index for fld in field_struc]
+        if isinstance(field_struc, AnaField):
+            return field_struc.idfield if mode == 'id' else field_struc.index             
         return field_struc
 
     @staticmethod

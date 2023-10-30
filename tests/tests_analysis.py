@@ -130,11 +130,13 @@ class Test_AnaDataset(unittest.TestCase):
     def test_sdataset(self):
         fruits = {'plants': ['fruit', 'fruit', 'fruit', 'fruit',
                                  'vegetable', 'vegetable', 'vegetable', 'vegetable'],
+                     'plts': ['fr', 'fr', 'fr', 'fr', 've', 've', 've', 've'], 
                      'quantity': ['1 kg', '10 kg', '1 kg', '10 kg',
                                    '1 kg', '10 kg', '1 kg', '10 kg'],
                      'product': ['apple', 'apple', 'orange', 'orange',
-                                  'peppers', 'peppers', 'banana', 'banana'],
-                     'price': [1, 10, 2, 20, 1.5, 15, 1, 1.5],
+                                  'peppers', 'peppers', 'carrot', 'carrot'],
+                     'price': [1, 10, 2, 20, 1.5, 15, 1.5, 20],
+                     'price level': ['low', 'low', 'high', 'high', 'low', 'low', 'high', 'high'],
                      'group': ['fruit 1', 'fruit 10', 'fruit 1', 'veget',
                                 'veget', 'veget', 'veget', 'veget'],
                      'id': [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008],
@@ -142,19 +144,19 @@ class Test_AnaDataset(unittest.TestCase):
                      'location': 	["fr", "gb", "es", "ch", "gb", "fr", "es", "ch"],
                      'valid': ["ok", "ok", "ok", "ok", "ok", "ok", "ok", "ok"]}
         ilm = Sdataset.ntv(fruits) 
-        self.assertEqual(ilm.analysis.getpartition(), [[0, 7], [1, 2], [6, 7], [5]])  
+        self.assertEqual(ilm.analysis.getpartition(), [[0, 2, 5], [0, 9], [2, 3], [2, 5, 8], [8, 9], [7]])  
         
-        ilm = Cdataset.from_ntv(fruits)
         ana = AnaDataset(ilm.analys())
-        self.assertEqual(ana.partitions('index', distributed=False), [[0, 1, 6], [0, 7], [1, 2], [6, 7], [5]])
+        self.assertEqual(ana.partitions('index', distributed=False), 
+                         [[0, 2, 5], [0, 2, 8], [0, 5, 8], [2, 5, 8], [0, 9], [2, 3], [8, 9], [7]])
         ana = AnaDataset(ilm.analys(True))
-        self.assertEqual(ana.partitions('index'), [[0, 7], [1, 2], [6, 7], [5]])
+        self.assertEqual(ana.partitions('index'), [[0, 2, 5], [2, 5, 8], [0, 9], [2, 3], [8, 9], [7]])
         self.assertEqual(ana.field_partition(mode='index', distributed=False), 
-                         {'primary': [0, 1, 6], 'secondary': [], 'unique': [8], 'variable': [2, 3, 4, 5, 7]})
+                         {'primary': [0, 2, 5], 'secondary': [1], 'unique': [10], 'variable': [3, 4, 6, 7, 8, 9]})
         self.assertEqual(ana.field_partition(mode='index'), 
-                         {'primary': [0, 7], 'secondary': [], 'unique': [8], 'variable': [1, 2, 3, 4, 5, 6]})
+                         {'primary': [0, 2, 5], 'secondary': [1], 'unique': [10], 'variable': [3, 4, 6, 7, 8, 9]})
         self.assertEqual(ana.field_partition(mode='index', partition=ana.partitions()[1]), 
-                         {'primary': [1, 2], 'secondary': [0], 'unique': [8], 'variable': [3, 4, 5, 6, 7]})
+                         {'primary': [2, 5, 8], 'secondary': [], 'unique': [10], 'variable': [0, 1, 3, 4, 6, 7, 9]})
         self.assertEqual(ana.field_partition()['variable'], ana.variable)
         self.assertEqual(ana.field_partition()['primary'], ana.primary)
         self.assertEqual(ana.field_partition()['secondary'], ana.secondary)
