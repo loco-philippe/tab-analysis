@@ -386,8 +386,8 @@ class AnaRelation:
     @property
     def ratecpl(self):
         '''return float ratecpl indicator'''
-        denom = self.distance + self.distomax
-        return 0 if denom == 0 else self.distance / denom
+        disdis = self.distance + self.distomax
+        return 0 if disdis == 0 else self.distance / disdis
 
     @property
     def rateder(self):
@@ -430,6 +430,8 @@ class AnaDfield(AnaField):
     *instance methods*
 
     - `list_parents`
+    - `to_dict`
+    - `view`
     - `dic_inner_node`
     '''
     def __new__(cls, other, dataset=None):
@@ -517,7 +519,7 @@ class AnaDfield(AnaField):
 
     @property
     def p_derived(self):
-        '''return the derived parent of the AnaDfield'''
+        '''return the derived or coupled parent of the AnaDfield'''
         if self.category in (UNIQUE, ROOTED, ROOTDERIVED):
             return self.dataset.root
         if self.category == COUPLED:
@@ -537,7 +539,6 @@ class AnaDfield(AnaField):
     @property
     def p_distance(self):
         '''return the parent with minimal distance of the AnaDfield'''
-        #if self.category in (UNIQUE, ROOTED, COUPLED):
         if self.category in (ROOTED, COUPLED):
             return self.p_derived
         dist_up = [rel.distance for rel in self.list_relations
@@ -669,6 +670,9 @@ class AnaDataset:
     - `ana_relations`
     - `root`
     - `primary`
+    - `secondary`
+    - `unique`
+    - `variable`
     - `dimension`
 
     *instance methods*
@@ -677,6 +681,8 @@ class AnaDataset:
     - `get_relation`
     - `dfield`
     - `tree`
+    - `to_dict`
+    - `indicator`
     - `partitions`
     - `field_partition`
     '''
