@@ -204,6 +204,11 @@ class Test_AnaDataset(unittest.TestCase):
                           ['info', 'info', 'info', 'info'], [12, 20, 20, 12]])
         ana = AnaDataset(ilm.analys(True))
         self.assertEqual(ana.partitions('index')[0], [0, 3])        
+
+    def test_tree(self):
+        il = Sdataset.ntv([[1,2,3,4], [5,6,7,8], [0,0,1,1]])
+        self.assertEqual(AnaDataset(il.analys(True)).tree(),
+                         '-1: root-derived (4)\n   0 : i0 (0 - 4)\n   1 : i1 (0 - 4)\n   2 : i2 (2 - 2)')
         
 if __name__ == '__main__':
     

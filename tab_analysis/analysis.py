@@ -555,7 +555,8 @@ class AnaDfield(AnaField):
         dic[DISTROOT] = self.dist_root
         dic[NUM] = self.index
         dic[CATEGORY] = self.category
-        dic[DISPARENT] = Util.view(self.p_distance, mode)
+        #dic[DISPARENT] = Util.view(self.p_distance, mode)
+        dic[DISPARENT] = self.p_distance.view(mode)
         if self.p_distance == self.dataset.root:
             dic[DISDISTANCE] = self.dist_root
             dic[DISRATECPL] = self.dist_root / (len(self.dataset) - 1) / self.lencodec
@@ -564,7 +565,8 @@ class AnaDfield(AnaField):
             dic[DISDISTANCE] = self.dataset.relations[self][self.p_distance].distance
             dic[DISRATECPL] = self.dataset.relations[self][self.p_distance].ratecpl
             dic[DISRATEDER] = self.dataset.relations[self][self.p_distance].rateder
-        dic[DERPARENT] = Util.view(self.p_derived, mode)
+        #dic[DERPARENT] = Util.view(self.p_derived, mode)
+        dic[DERPARENT] = self.p_derived.view(mode)
         if self.p_derived == self.dataset.root:
             dic[DERDISTANCE] = self.dist_root
             dic[DERRATECPL] = self.dist_root / (len(self.dataset) - 1) / self.lencodec
@@ -574,6 +576,15 @@ class AnaDfield(AnaField):
             dic[DERRATECPL] = self.dataset.relations[self][self.p_derived].ratecpl
             dic[DERRATEDER] = self.dataset.relations[self][self.p_derived].rateder
         return dic
+
+    def view(self, mode='field'):
+        ''' return a representation of the AnaDfield
+
+         *Parameters*
+
+        - **mode** : str - AnaDfield representation ('field', 'id', 'index')
+        '''
+        return Util.view(self, mode)
         
     def list_parents(self, typeparent='derived', mode='field'):
         ''' return the list of the AnaDfield's parents in the family tree up to
@@ -618,7 +629,8 @@ class AnaDfield(AnaField):
         adding += str(self.lencodec)
         name = self.idfield[:lname] + ' (' + adding + ')'
         lis = [name.replace(' ', '*').replace("'", '*')]
-        if self.category != COUPLED:
+        #if self.category != COUPLED:
+        if not self.category in (ROOTED, COUPLED):
             for rel in self.list_coupled:
                 lis.append(rel.relation[1].dic_inner_node(mode, lname))
         if not self.category in (ROOTED, UNIQUE):
@@ -889,6 +901,36 @@ class AnaDataset:
                     if not fld in partition + secondary + unique]
         return Util.view({'primary': partition, 'secondary': secondary,
                           'unique': unique, 'variable': variable}, mode)
+
+    def indicator(self, fullsize, size):
+        '''generate size indicators: ol (object lightness), ul (unicity level), 
+        gain (sizegain)
+
+        *Parameters*
+
+        - **fullsize** : int - size with full codec
+        - **size** : int - size with existing codec
+
+        *Returns* : dict'''
+        lenindex = len(self.fields)
+        indexlen = sum(fld.lencodec for fld in self.fields)
+        nval = len(self) * (lenindex + 1)
+        sval = fullsize / nval
+        ncod = indexlen + lenindex
+        
+        if nval != ncod:
+            scod = (size - ncod * sval) / (nval - ncod)
+            olight = scod / sval
+        else:
+            olight = None
+        return {'total values': nval, 'mean size': round(sval, 3),
+                'unique values': ncod, 'mean coding size': round(scod, 3),
+                'unicity level': round(ncod / nval, 3),
+                'optimize level': round(size / fullsize, 3),
+                'object lightness': round(olight, 3),
+                'maxgain': round((nval - ncod) / nval, 3),
+                'gain': round((fullsize - size) / fullsize, 3)}
+
 
     def _add_child(self, field, childs):
         ''' add derived or coupled fields in the childs list'''
