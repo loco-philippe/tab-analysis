@@ -386,12 +386,13 @@ class AnaRelation:
     @property
     def ratecpl(self):
         '''return float ratecpl indicator'''
-        return self.distance / (self.distance + self.distomax)
+        denom = self.distance + self.distomax
+        return 0 if denom == 0 else self.distance / denom
 
     @property
     def rateder(self):
         '''return float rateder indicator'''
-        return self.distomin / self.dran
+        return 0 if self.dran == 0 else self.distomin / self.dran
 
     @property
     def typecoupl(self):
@@ -551,6 +552,12 @@ class AnaDfield(AnaField):
         return [fld for fld in list_dmin if fld.lencodec == max_lencodec][0]
 
     def to_dict(self, mode='field'):
+        '''return a dict with field attributes.
+
+         *Parameters*
+
+        - **mode** : str (default 'field') - AnaDfield representation ('field', 'id', 'index')
+        '''
         dic = super().to_dict(full=True, notnone=False)
         dic[DISTROOT] = self.dist_root
         dic[NUM] = self.index
@@ -582,7 +589,7 @@ class AnaDfield(AnaField):
 
          *Parameters*
 
-        - **mode** : str - AnaDfield representation ('field', 'id', 'index')
+        - **mode** : str (default 'field') - AnaDfield representation ('field', 'id', 'index')
         '''
         return Util.view(self, mode)
         
@@ -843,6 +850,20 @@ class AnaDataset:
             return tre
         return Util.clean_dic(tree, '*', ' ')
 
+    def to_dict(self, mode='field', keys=None):
+        '''return a dict with field attributes.
+
+         *Parameters*
+
+        - **mode** : str (default 'field') - AnaDfield representation 
+        ('field', 'id', 'index')
+        - **keys** : string, list or tuple - list of keys or single key to return
+        if 'all' or None, all keys are returned
+        if list, only keys in list are returned
+        if string, only values associated to the string(key) are returned'''
+        return Util.filter_dic([fld.to_dict(mode=mode) 
+                                for fld in self.fields], keys)
+    
     def partitions(self, mode='field', distributed=True):
         '''return a list of available partitions (the first is highest).
 
@@ -969,9 +990,9 @@ class Util:
         return field_struc
 
     @staticmethod
-    def reduce_dic(dic):
+    def reduce_dic(obj):
         '''return a dict without empty or None values'''
-        return {key: val for key, val in dic.items() if not val is None}
+        return {key: val for key, val in obj.items() if not val is None}
 
     @staticmethod
     def clean_dic(obj, old, new):
@@ -986,6 +1007,25 @@ class Util:
             return [Util.clean_dic(val, old, new) for val in obj]
         return obj
 
+    @staticmethod
+    def filter_dic(obj, keys):
+        '''return extract of a list of dict or of a dict
+
+         *Parameters*
+
+        - **keys** : string, list or tuple - list of keys or single key to return
+        if 'all' or None, all keys are returned
+        if list, only keys in list are returned
+        if string, only values associated to the string(key) are returned'''
+        if not keys or keys == 'all':
+            return obj
+        if isinstance(obj, list):
+            return [ Util.filter_dic(dic, keys) for dic in obj ]
+        if isinstance(keys, str) and isinstance(obj, dict):
+            return obj.get(keys, None)
+        if isinstance(keys, (list, tuple)) and isinstance(obj, dict):
+            return {key: val for key, val in obj.items() if key in keys}
+        return obj
 
 class AnaError(Exception):
     ''' Analysis Exception'''
