@@ -183,7 +183,7 @@ class AnaField:
         - **notnone** : boolean (default True) - if True, None values are not included
         '''
         dic = {LENCODEC: self.lencodec, MINCODEC: self.mincodec,
-               MAXCODEC: self.maxcodec, HASHF: self.hashf}
+               MAXCODEC: self.maxcodec}
         if idfield or full:
             dic[IDFIELD] = self.idfield
         if full:
