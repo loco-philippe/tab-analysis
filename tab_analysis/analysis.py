@@ -34,7 +34,6 @@ LINKED = 'linked'
 CROSSED = 'crossed'
 DISTRIBUTED = 'distributed'
 ROOTED = 'rooted'
-ROOTDERIVED = 'root derived'
 ROOT = 'root'
 
 IDFIELD = 'id'
@@ -426,6 +425,7 @@ class AnaDfield(AnaField):
     - `category`
     - `p_derived`
     - `p_distance`
+    - `p_distomin`
 
     *instance methods*
 
@@ -433,6 +433,7 @@ class AnaDfield(AnaField):
     - `to_dict`
     - `view`
     - `dic_inner_node`
+    - `p_min_dist`
     '''
     def __new__(cls, other, dataset=None):
         '''initialization of attributes from "other"'''
@@ -520,7 +521,7 @@ class AnaDfield(AnaField):
     @property
     def p_derived(self):
         '''return the derived or coupled parent of the AnaDfield'''
-        if self.category in (UNIQUE, ROOTED, ROOTDERIVED):
+        if self.category in (UNIQUE, ROOTED):
             return self.dataset.root
         if self.category == COUPLED:
             return [rel.relation[1] for rel in self.list_coupled
@@ -532,16 +533,30 @@ class AnaDfield(AnaField):
             if rel.distance == distance_min:
                 if rel.relation[1].category == ROOTED:
                     return self.dataset.root
-                if rel.relation[1].category in (MIXED, ROOTDERIVED):
+                if rel.relation[1].category == MIXED:
                     return rel.relation[1]
         return self.dataset.root
 
     @property
     def p_distance(self):
+        '''return the parent with minimal distance of the AnaDfield'''    
+        return self.p_min_dist()
+    
+    @property
+    def p_distomin(self):
+        '''return the parent with minimal distomin of the AnaDfield'''    
+        return self.p_min_dist(False)
+
+    def p_min_dist(self, distance=True):
         '''return the parent with minimal distance of the AnaDfield'''
-        if self.category in (ROOTED, COUPLED):
-            return self.p_derived
-        dist_up = [rel.distance for rel in self.list_relations
+        #if self.category in (ROOTED, COUPLED):
+        #    return self.p_derived
+        if distance:
+            dist_up = [rel.distance for rel in self.list_relations
+                   if rel.relation[1].lencodec >= self.lencodec
+                   and rel.relation[1].category != COUPLED]
+        else:
+            dist_up = [rel.distance for rel in self.list_relations
                    if rel.relation[1].lencodec >= self.lencodec
                    and rel.relation[1].category != COUPLED]
         if not dist_up or min(dist_up) == self.dist_root:
@@ -621,8 +636,10 @@ class AnaDfield(AnaField):
          *Parameters*
 
         - **lname** : integer - maximal length of the names
-        - **mode** : str (default 'field') - AnaDfield representation
-        ('field', 'id', 'index')
+        - **mode** : string (default 'derived') - kind of tree :
+            'derived' : derived tree
+            'distance': min distance tree
+            'distomin': min distomin tree
 
         *Returns* : dict where key is a AnaDfield and value is the list of
         the childs.
@@ -631,29 +648,33 @@ class AnaDfield(AnaField):
         if mode == 'distance':
             rel_parent = self.dataset.get_relation(self, self.p_distance)
             adding = str(rel_parent.distance) + ' - '
+        elif mode == 'distomin':
+            rel_parent = self.dataset.get_relation(self, self.p_distomin)
+            adding = str(rel_parent.distance) + ' - '
         elif mode == 'derived':
             rel_parent = self.dataset.get_relation(self, self.p_derived)
             adding = str(rel_parent.distance) + ' - '
         adding += str(self.lencodec)
         name = self.idfield[:lname] + ' (' + adding + ')'
         lis = [name.replace(' ', '*').replace("'", '*')]
-        #if self.category != COUPLED:
-        if not self.category in (ROOTED, COUPLED):
-            for rel in self.list_coupled:
-                lis.append(rel.relation[1].dic_inner_node(mode, lname))
-        if not self.category in (ROOTED, UNIQUE):
-            if mode == 'distance':
-                childs = [rel.relation[1] for rel in self.list_relations
-                          if rel.relation[1].p_distance == self and
-                          rel.relation[1].category != COUPLED]
-            elif mode == 'derived':
+        if mode == 'derived':
+            childs = []
+            if not self.category in (ROOTED, COUPLED):
+                for rel in self.list_coupled:
+                    lis.append(rel.relation[1].dic_inner_node(mode, lname))
+            if not self.category in (ROOTED, UNIQUE):
                 childs = [rel.relation[1] for rel in self.list_relations
                           if rel.relation[1].p_derived == self and
                           rel.relation[1].category != COUPLED]
-            for fld in childs:
-                lis.append(fld.dic_inner_node(mode, lname))
+        if mode == 'distomin':
+            childs = [rel.relation[1] for rel in self.list_relations
+                      if rel.relation[1].p_distomin == self]
+        if mode == 'distance':
+            childs = [rel.relation[1] for rel in self.list_relations
+                      if rel.relation[1].p_distance == self]
+        for fld in childs:
+            lis.append(fld.dic_inner_node(mode, lname))
         return {str(self.index).ljust(2, '*'): lis}
-
 
 class AnaDataset:
     '''This class analyses the structure of a dataset.
@@ -837,10 +858,13 @@ class AnaDataset:
         - **mode** : string (default 'derived') - kind of tree :
             'derived' : derived tree
             'distance': min distance tree
+            'distomin': min distomin tree
         '''
         lis = ['root-' + mode + '*(' + str(len(self)) + ')']
         if mode == 'distance':
             childs = [fld for fld in self.fields if fld.p_distance == self.root]
+        elif mode == 'distomin':
+            childs = [fld for fld in self.fields if fld.p_distomin == self.root]        
         elif mode == 'derived':
             childs = [fld for fld in self.fields if fld.p_derived == self.root]
         for fld in childs:

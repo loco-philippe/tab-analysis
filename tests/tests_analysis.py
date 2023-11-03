@@ -60,9 +60,9 @@ class Test_Cdataset(unittest.TestCase):
              Cfield([200, 200, 300, 200, 300, 300],  'i3', default=True), #derived from root
              Cfield([201, 201, 301, 201, 301, 301],  'i4', default=True)] #coupled to i3
             , 'test') 
-        self.assertEqual(cdts.analys()['relations'], dic['relations'])
-        self.assertEqual(cdts.analys()['name'], dic['name'])
-        self.assertEqual(cdts.analys()['length'], dic['length'])
+        self.assertEqual(cdts.to_analysis()['relations'], dic['relations'])
+        self.assertEqual(cdts.to_analysis()['name'], dic['name'])
+        self.assertEqual(cdts.to_analysis()['length'], dic['length'])
 
 class Test_AnaField_AnaRelation(unittest.TestCase):
     
@@ -97,7 +97,6 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
         
     def test_field_typology(self):
         self.assertEqual([fld.category for fld in dts.fields], 
-                         #[ROOTED, ROOTDERIVED, DERIVED, ROOTDERIVED, COUPLED])
                          [ROOTED, MIXED, DERIVED, DERIVED, COUPLED])
         self.assertEqual([fld.p_derived.idfield for fld in dts.fields], 
                          [ROOT, ROOT, 'i1', ROOT, 'i3'])
@@ -146,10 +145,10 @@ class Test_AnaDataset(unittest.TestCase):
         ilm = Sdataset.ntv(fruits) 
         self.assertEqual(ilm.analysis.getpartition(), [[0, 2, 5], [0, 9], [2, 3], [2, 5, 8], [8, 9], [7]])  
         
-        ana = AnaDataset(ilm.analys())
+        ana = AnaDataset(ilm.to_analysis())
         self.assertEqual(ana.partitions('index', distributed=False), 
                          [[0, 2, 5], [0, 2, 8], [0, 5, 8], [2, 5, 8], [0, 9], [2, 3], [8, 9], [7]])
-        ana = AnaDataset(ilm.analys(True))
+        ana = AnaDataset(ilm.to_analysis(True))
         self.assertEqual(ana.partitions('index'), [[0, 2, 5], [2, 5, 8], [0, 9], [2, 3], [8, 9], [7]])
         self.assertEqual(ana.field_partition(mode='index', distributed=False), 
                          {'primary': [0, 2, 5], 'secondary': [1], 'unique': [10], 'variable': [3, 4, 6, 7, 8, 9]})
@@ -175,39 +174,39 @@ class Test_AnaDataset(unittest.TestCase):
                          [None, None, None, 'gr1', 'gr1', 'gr2'],
                          ['philippe white', 'philippe white', 'philippe white',
                           'anne white', 'anne white', 'anne white']])
-        self.assertEqual(AnaDataset(ilm.analys(True)).partitions('index'), [])
+        self.assertEqual(AnaDataset(ilm.to_analysis(True)).partitions('index'), [])
         ilm = Cdataset.from_ntv([['math', 'english', 'software', 'math', 'english', 'software'],
                           ['philippe', 'philippe', 'philippe', 'anne', 'anne', 'anne'],
                           [None, None, None, 'gr1', 'gr1', 'gr2'],
                           ['philippe white', 'philippe white', 'philippe white',
                            'anne white', 'anne white', 'anne white']])
-        ana = AnaDataset(ilm.analys(True))
+        ana = AnaDataset(ilm.to_analysis(True))
         self.assertEqual(ana.partitions('index')[0], [0, 1])
         self.assertEqual(ana.dimension, 2)
         
         ilm = Cdataset.from_ntv([['er', 'rt', 'er', 'ry'], [0, 2, 0, 2], [30, 12, 12, 15],
                      [2, 0, 2, 0], [2, 2, 0, 0], ['info', 'info', 'info', 'info'], [12, 12, 15, 30]])
-        ana = AnaDataset(ilm.analys(True))
+        ana = AnaDataset(ilm.to_analysis(True))
         self.assertEqual(ana.partitions('index')[0], [1, 4])
         
         ilm = Cdataset.from_ntv([['er', 'rt', 'er', 'ry'], [0, 2, 0, 2], [30, 12, 20, 30],
                      [2, 0, 2, 0], [2, 2, 0, 0], ['info', 'info', 'info', 'info'], [12, 20, 20, 12]])
-        ana = AnaDataset(ilm.analys(True))
+        ana = AnaDataset(ilm.to_analysis(True))
         self.assertEqual(ana.partitions('index')[0], [1, 4])
         
         ilm = Cdataset.from_ntv([[0, 2, 0, 2], [30, 12, 12, 15], [2, 0, 2, 0], [2, 2, 0, 0],
                           ['info', 'info', 'info', 'info'], [12, 12, 15, 30]])
-        ana = AnaDataset(ilm.analys(True))
+        ana = AnaDataset(ilm.to_analysis(True))
         self.assertEqual(ana.partitions('index')[0], [0, 3])
         
         ilm = Cdataset.from_ntv([[0, 2, 0, 2], [30, 12, 20, 30], [2, 0, 2, 0], [2, 2, 0, 0],
                           ['info', 'info', 'info', 'info'], [12, 20, 20, 12]])
-        ana = AnaDataset(ilm.analys(True))
+        ana = AnaDataset(ilm.to_analysis(True))
         self.assertEqual(ana.partitions('index')[0], [0, 3])        
 
     def test_tree(self):
         il = Sdataset.ntv([[1,2,3,4], [5,6,7,8], [0,0,1,1]])
-        self.assertEqual(AnaDataset(il.analys(True)).tree(),
+        self.assertEqual(AnaDataset(il.to_analysis(True)).tree(),
                          '-1: root-derived (4)\n   0 : i0 (0 - 4)\n   1 : i1 (0 - 4)\n   2 : i2 (2 - 2)')
         
 if __name__ == '__main__':
