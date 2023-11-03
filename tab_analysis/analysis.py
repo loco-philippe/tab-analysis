@@ -308,7 +308,8 @@ class AnaRelation:
         return hash(self.relation[0]) + hash(self.relation[1]) + \
             hash(self.dist) + hash(self.hashr) + hash(self.distrib)
 
-    def to_dict(self, distances=False, full=False, relation=False, notnone=True):
+    def to_dict(self, distances=False, full=False, mode='field', relation=False,
+                notnone=True):
         '''return a dict with AnaRelation attributes.
 
          *Parameters*
@@ -317,10 +318,11 @@ class AnaRelation:
         - **full** : boolean (default False) - if True, all the attributes are included
         - **relation** : boolean (default False) - if True, idfield are included
         - **notnone** : boolean (default True) - if True, None values are not included
+        - **mode** : str (default 'field') - AnaDfield representation ('field', 'id', 'index')
         '''
         dic = {DIST: self.dist, HASHR: self.hashr}
         if relation or full:
-            dic[RELATION] = self.id_relation
+            dic[RELATION] = Util.view(self.relation, mode) 
             dic[TYPECOUPL] = self.typecoupl
         if distances or full:
             dic |= {DISTANCE: self.distance, DISTOMIN: self.distomin,
@@ -828,8 +830,8 @@ class AnaDataset:
 
          *Parameters*
 
-        - **fld1** : AnaDfield, AnaField or str (idfield) - first relation AnaDfield
-        - **fld2** : AnaDfield, AnaField or str (idfield) - second relation AnaDfield
+        - **fld1** : AnaDfield, AnaField, int or str (idfield) - first relation AnaDfield
+        - **fld2** : AnaDfield, AnaField, int or str (idfield) - second relation AnaDfield
         '''
         fl1 = self.dfield(fld1)
         fl2 = self.dfield(fld2)
@@ -838,9 +840,11 @@ class AnaDataset:
         return self.relations[self.dfield(fld1)][self.dfield(fld2)]
 
     def dfield(self, fld):
-        '''return the AnaDfield matching with fld. Fld is str, AnaDfield or AnaField'''
+        '''return the AnaDfield matching with fld. Fld is str, int, AnaDfield or AnaField'''
         if isinstance(fld, AnaDfield):
             return fld
+        if isinstance(fld, int):
+            return self.fields[fld]
         if isinstance(fld, str):
             if fld in [dfld.idfield for dfld in self.fields]:
                 return [dfld for dfld in self.fields if dfld.idfield == fld][0]
