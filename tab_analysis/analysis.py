@@ -55,8 +55,9 @@ DIFF = 'diff'
 DRAN = 'dran'
 NUM = 'num'
 CATEGORY = 'category'
-DERPARENT = 'derparent'
-DISPARENT = 'disparent'
+PDERIVED = 'pderived'
+PDISTANCE = 'pdistance'
+PDISTOMIN = 'pdistomin'
 DISDISTANCE = 'disdistance'
 DERDISTANCE = 'derdistance'
 DISRATECPL = 'disratecpl'
@@ -551,38 +552,44 @@ class AnaDfield(AnaField):
 
     def p_min_dist(self, distance=True):
         '''return the parent with minimal distance of the AnaDfield'''
-        #if self.category in (ROOTED, COUPLED):
-        #    return self.p_derived
         if distance:
             dist_up = [rel.distance for rel in self.list_relations
-                   if rel.relation[1].lencodec >= self.lencodec
-                   and rel.relation[1].category != COUPLED]
+                   if (rel.relation[1].lencodec > self.lencodec or 
+                       rel.relation[1].lencodec == self.lencodec and 
+                       rel.relation[1].index < self.index) and
+                      rel.relation[1].category != COUPLED]
         else:
             dist_up = [rel.distance for rel in self.list_relations
-                   if rel.relation[1].lencodec >= self.lencodec
-                   and rel.relation[1].category != COUPLED]
+                   if (rel.relation[1].lencodec > self.lencodec or 
+                       rel.relation[1].lencodec == self.lencodec and 
+                       rel.relation[1].index < self.index) and
+                      rel.relation[1].category != COUPLED]
         if not dist_up or min(dist_up) == self.dist_root:
             return self.dataset.root
         distance_min = min(dist_up)
         list_dmin = [rel.relation[1] for rel in self.list_relations
-                     if rel.distance == distance_min]
+                     if rel.distance == distance_min and 
+                     (rel.relation[1].lencodec > self.lencodec or 
+                         rel.relation[1].lencodec == self.lencodec and 
+                         rel.relation[1].index < self.index)]
         max_lencodec = max(fld.lencodec for fld in list_dmin)
         return [fld for fld in list_dmin if fld.lencodec == max_lencodec][0]
 
-    def to_dict(self, mode='field'):
+    def to_dict(self, mode='id'):
         '''return a dict with field attributes.
 
          *Parameters*
 
-        - **mode** : str (default 'field') - AnaDfield representation ('field', 'id', 'index')
+        - **mode** : str (default 'id') - AnaDfield representation ('field', 'id', 'index')
         '''
         dic = super().to_dict(full=True, notnone=False)
         dic[DISTROOT] = self.dist_root
         dic[NUM] = self.index
         dic[CATEGORY] = self.category
-        #dic[DISPARENT] = Util.view(self.p_distance, mode)
-        dic[DISPARENT] = self.p_distance.view(mode)
-        if self.p_distance == self.dataset.root:
+        dic[PDISTANCE] = self.p_distance.view(mode)
+        dic[PDISTOMIN] = self.p_distomin.view(mode)
+        dic[PDERIVED] = self.p_derived.view(mode)
+        """if self.p_distance == self.dataset.root:
             dic[DISDISTANCE] = self.dist_root
             dic[DISRATECPL] = self.dist_root / (len(self.dataset) - 1) / self.lencodec
             dic[DISRATEDER] = 0.0
@@ -590,8 +597,6 @@ class AnaDfield(AnaField):
             dic[DISDISTANCE] = self.dataset.relations[self][self.p_distance].distance
             dic[DISRATECPL] = self.dataset.relations[self][self.p_distance].ratecpl
             dic[DISRATEDER] = self.dataset.relations[self][self.p_distance].rateder
-        #dic[DERPARENT] = Util.view(self.p_derived, mode)
-        dic[DERPARENT] = self.p_derived.view(mode)
         if self.p_derived == self.dataset.root:
             dic[DERDISTANCE] = self.dist_root
             dic[DERRATECPL] = self.dist_root / (len(self.dataset) - 1) / self.lencodec
@@ -599,7 +604,7 @@ class AnaDfield(AnaField):
         else:
             dic[DERDISTANCE] = self.dataset.relations[self][self.p_derived].distance
             dic[DERRATECPL] = self.dataset.relations[self][self.p_derived].ratecpl
-            dic[DERRATEDER] = self.dataset.relations[self][self.p_derived].rateder
+            dic[DERRATEDER] = self.dataset.relations[self][self.p_derived].rateder"""
         return dic
 
     def view(self, mode='field'):
@@ -775,6 +780,14 @@ class AnaDataset:
         return [rel for fldrel in self.relations.values() for rel in fldrel.values()]
 
     @property
+    def p_relations(self):
+        '''return the list of oriented AnaRelation (from child to parent)'''
+        return [rel for rel in self.ana_relations if
+                  rel.relation[0].lencodec > rel.relation[1].lencodec or 
+                  (rel.relation[0].lencodec == rel.relation[1].lencodec and 
+                   rel.relation[0].index > rel.relation[1].index)]
+
+    @property
     def root(self):
         '''return the root AnaDfield'''
         len_self = len(self)
@@ -841,6 +854,8 @@ class AnaDataset:
 
     def dfield(self, fld):
         '''return the AnaDfield matching with fld. Fld is str, int, AnaDfield or AnaField'''
+        if fld == -1 or fld == ROOT:
+            return self.root
         if isinstance(fld, AnaDfield):
             return fld
         if isinstance(fld, int):
@@ -884,19 +899,27 @@ class AnaDataset:
             return tre
         return Util.clean_dic(tree, '*', ' ')
 
-    def to_dict(self, mode='field', keys=None):
-        '''return a dict with field attributes.
+    def to_dict(self, mode='field', keys=None, relations=False):
+        '''return a dict with fields attributes and optionaly relations attributes.
 
          *Parameters*
 
         - **mode** : str (default 'field') - AnaDfield representation 
         ('field', 'id', 'index')
+        - **relations** : boolean (default: False) - if False return a list of fields,
+        if True return a dict '{"fields": <list of fields>, "relations": <list of relations>}'
         - **keys** : string, list or tuple - list of keys or single key to return
         if 'all' or None, all keys are returned
         if list, only keys in list are returned
         if string, only values associated to the string(key) are returned'''
-        return Util.filter_dic([fld.to_dict(mode=mode) 
-                                for fld in self.fields], keys)
+        fields = Util.filter_dic([fld.to_dict(mode=mode) for fld in self.fields], keys)
+        leng = len(self.fields)
+        if not relations:
+            return fields
+        return {'fields': fields, 'relations': 
+                 [self.get_relation(i, j).to_dict(full=True, mode=mode)
+                  for i in range(-1, leng) for j in range(i + 1, leng)] }
+        
     
     def partitions(self, mode='field', distributed=True):
         '''return a list of available partitions (the first is highest).
