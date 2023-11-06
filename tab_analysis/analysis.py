@@ -343,6 +343,11 @@ class AnaRelation:
             return [fld.idfield for fld in self.relation]
         return []
 
+    @property 
+    def is_parent_child(self):
+        return (self.relation[0].lencodec > self.relation[1].lencodec or 
+                (self.relation[0].lencodec == self.relation[1].lencodec and 
+                 self.relation[0].index < self.relation[1].index))
     @property
     def index_relation(self):
         '''return a list with the index of the two fields involved'''
@@ -554,24 +559,17 @@ class AnaDfield(AnaField):
         '''return the parent with minimal distance of the AnaDfield'''
         if distance:
             dist_up = [rel.distance for rel in self.list_relations
-                   if (rel.relation[1].lencodec > self.lencodec or 
-                       rel.relation[1].lencodec == self.lencodec and 
-                       rel.relation[1].index < self.index) and
-                      rel.relation[1].category != COUPLED]
+                       if not rel.is_parent_child and
+                           rel.relation[1].category != COUPLED]
         else:
             dist_up = [rel.distance for rel in self.list_relations
-                   if (rel.relation[1].lencodec > self.lencodec or 
-                       rel.relation[1].lencodec == self.lencodec and 
-                       rel.relation[1].index < self.index) and
-                      rel.relation[1].category != COUPLED]
+                       if not rel.is_parent_child and  
+                           rel.relation[1].category != COUPLED]
         if not dist_up or min(dist_up) == self.dist_root:
             return self.dataset.root
         distance_min = min(dist_up)
         list_dmin = [rel.relation[1] for rel in self.list_relations
-                     if rel.distance == distance_min and 
-                     (rel.relation[1].lencodec > self.lencodec or 
-                         rel.relation[1].lencodec == self.lencodec and 
-                         rel.relation[1].index < self.index)]
+                     if rel.distance == distance_min and not rel.is_parent_child]
         max_lencodec = max(fld.lencodec for fld in list_dmin)
         return [fld for fld in list_dmin if fld.lencodec == max_lencodec][0]
 
@@ -589,22 +587,6 @@ class AnaDfield(AnaField):
         dic[PDISTANCE] = self.p_distance.view(mode)
         dic[PDISTOMIN] = self.p_distomin.view(mode)
         dic[PDERIVED] = self.p_derived.view(mode)
-        """if self.p_distance == self.dataset.root:
-            dic[DISDISTANCE] = self.dist_root
-            dic[DISRATECPL] = self.dist_root / (len(self.dataset) - 1) / self.lencodec
-            dic[DISRATEDER] = 0.0
-        else:
-            dic[DISDISTANCE] = self.dataset.relations[self][self.p_distance].distance
-            dic[DISRATECPL] = self.dataset.relations[self][self.p_distance].ratecpl
-            dic[DISRATEDER] = self.dataset.relations[self][self.p_distance].rateder
-        if self.p_derived == self.dataset.root:
-            dic[DERDISTANCE] = self.dist_root
-            dic[DERRATECPL] = self.dist_root / (len(self.dataset) - 1) / self.lencodec
-            dic[DERRATEDER] = 0.0
-        else:
-            dic[DERDISTANCE] = self.dataset.relations[self][self.p_derived].distance
-            dic[DERRATECPL] = self.dataset.relations[self][self.p_derived].ratecpl
-            dic[DERRATEDER] = self.dataset.relations[self][self.p_derived].rateder"""
         return dic
 
     def view(self, mode='field'):
@@ -781,11 +763,8 @@ class AnaDataset:
 
     @property
     def p_relations(self):
-        '''return the list of oriented AnaRelation (from child to parent)'''
-        return [rel for rel in self.ana_relations if
-                  rel.relation[0].lencodec > rel.relation[1].lencodec or 
-                  (rel.relation[0].lencodec == rel.relation[1].lencodec and 
-                   rel.relation[0].index > rel.relation[1].index)]
+        '''return the list of oriented AnaRelation (parent first, child second)'''
+        return [rel for rel in self.ana_relations if rel.is_parent_child]
 
     @property
     def root(self):
