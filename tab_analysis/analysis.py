@@ -66,6 +66,7 @@ DISRATEDER = 'disrateder'
 DERRATEDER = 'derrateder'
 
 TYPECOUPL = 'typecoupl'
+PARENTCHILD = 'parentchild'
 DISTANCE = 'distance'
 DISTOMIN = 'distomin'
 DISTOMAX = 'distomax'
@@ -325,6 +326,7 @@ class AnaRelation:
         if relation or full:
             dic[RELATION] = Util.view(self.relation, mode) 
             dic[TYPECOUPL] = self.typecoupl
+            dic[PARENTCHILD] = self.parent_child
         if distances or full:
             dic |= {DISTANCE: self.distance, DISTOMIN: self.distomin,
                     DISTOMAX: self.distomax, DISTRIBUTED: self.distrib,
@@ -344,7 +346,7 @@ class AnaRelation:
         return []
 
     @property 
-    def is_parent_child(self):
+    def parent_child(self):
         return (self.relation[0].lencodec > self.relation[1].lencodec or 
                 (self.relation[0].lencodec == self.relation[1].lencodec and 
                  self.relation[0].index < self.relation[1].index))
@@ -493,13 +495,13 @@ class AnaDfield(AnaField):
     def list_p_derived(self):
         '''return the list of the derived relations with the parents of AnaDfield'''
         return [rel for rel in self.list_relations if rel.typecoupl == DERIVED
-                and rel.relation[1].lencodec > self.lencodec]
+                and not rel.parent_child]
 
     @property
     def list_c_derived(self):
         '''return the list of the derived relations with the childs of AnaDfield'''
         return [rel for rel in self.list_relations if rel.typecoupl == DERIVED
-                and rel.relation[1].lencodec < self.lencodec
+                and rel.parent_child
                 and rel.relation[1].category != UNIQUE]
 
     @property
@@ -520,7 +522,7 @@ class AnaDfield(AnaField):
         if self.typecodec in (COMPLETE, FULL):
             return ROOTED
         if COUPLED in [rel.typecoupl for rel in self.list_relations
-                       if rel.relation[1].index < self.index]:
+                       if not rel.parent_child]:
             return COUPLED
         if not self.list_c_derived:
             return DERIVED
@@ -558,18 +560,16 @@ class AnaDfield(AnaField):
     def p_min_dist(self, distance=True):
         '''return the parent with minimal distance of the AnaDfield'''
         if distance:
-            dist_up = [rel.distance for rel in self.list_relations
-                       if not rel.is_parent_child and
-                           rel.relation[1].category != COUPLED]
+            dist_up = [rel.distance for rel in self.list_relations if
+                       not rel.parent_child and rel.relation[1].category != COUPLED]
         else:
-            dist_up = [rel.distance for rel in self.list_relations
-                       if not rel.is_parent_child and  
-                           rel.relation[1].category != COUPLED]
+            dist_up = [rel.distance for rel in self.list_relations if
+                       not rel.parent_child and rel.relation[1].category != COUPLED]
         if not dist_up or min(dist_up) == self.dist_root:
             return self.dataset.root
-        distance_min = min(dist_up)
+        dist_min = min(dist_up)
         list_dmin = [rel.relation[1] for rel in self.list_relations
-                     if rel.distance == distance_min and not rel.is_parent_child]
+                     if rel.distance == dist_min and not rel.parent_child]
         max_lencodec = max(fld.lencodec for fld in list_dmin)
         return [fld for fld in list_dmin if fld.lencodec == max_lencodec][0]
 
@@ -764,7 +764,7 @@ class AnaDataset:
     @property
     def p_relations(self):
         '''return the list of oriented AnaRelation (parent first, child second)'''
-        return [rel for rel in self.ana_relations if rel.is_parent_child]
+        return [rel for rel in self.ana_relations if rel.parent_child]
 
     @property
     def root(self):
@@ -911,7 +911,8 @@ class AnaDataset:
         '''
         partit = [[fld] for fld in self.fields if fld.category == ROOTED]
         crossed = [rel for rel in self.ana_relations if rel.typecoupl == CROSSED
-                   and rel.relation[1].index > rel.relation[0].index
+                   #and rel.relation[1].index > rel.relation[0].index
+                   and rel.parent_child
                    and rel.relation[0].category != COUPLED
                    and rel.relation[1].category != COUPLED]
         if distributed:

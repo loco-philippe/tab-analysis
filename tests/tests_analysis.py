@@ -75,12 +75,12 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
                           'dmincodec': 0, 'dmaxcodec': 0, 'rancodec': 0, 
                           'typecodec': 'complete'})        
         self.assertEqual(i2i1.to_dict(relation=True, mode='id'), 
-                         {'dist': 3, 'relation': ['i2', 'i1'], 'typecoupl': 'derived'})
+                         {'dist': 3, 'parentchild': False, 'relation': ['i2', 'i1'], 'typecoupl': 'derived'})
         self.assertEqual(i2i1.to_dict(relation=True, distances=True, mode='id'), 
-                         {'dist': 3, 'relation': ['i2', 'i1'], 'typecoupl': 'derived',
+                         {'dist': 3, 'relation': ['i2', 'i1'], 'typecoupl': 'derived', 'parentchild': False,
                           'distance': 1, 'distomin': 0, 'distomax': 3, 'ratecpl': 0.25, 'rateder': 0.0})
         self.assertEqual(i2i1.to_dict(full=True, mode='id'), 
-                         {'dist': 3, 'relation': ['i2', 'i1'], 'typecoupl': 'derived',
+                         {'dist': 3, 'relation': ['i2', 'i1'], 'typecoupl': 'derived', 'parentchild': False,
                           'distance': 1, 'distomin': 0, 'distomax': 3, 'ratecpl': 0.25, 'rateder': 0.0,
                           'dmax': 6, 'dmin': 3, 'diff': 1, 'dran': 3})
         #print(dts.relations[fld1][fld2], dts.relations[fld2][fld1])
@@ -143,7 +143,7 @@ class Test_AnaDataset(unittest.TestCase):
                      'location': 	["fr", "gb", "es", "ch", "gb", "fr", "es", "ch"],
                      'valid': ["ok", "ok", "ok", "ok", "ok", "ok", "ok", "ok"]}
         ilm = Sdataset.ntv(fruits) 
-        self.assertEqual(ilm.analysis.getpartition(), [[0, 2, 5], [0, 9], [2, 3], [2, 5, 8], [8, 9], [7]])  
+        self.assertEqual(ilm._analysis.partitions('index'), [[0, 2, 5], [2, 5, 8], [0, 9], [2, 3], [8, 9], [7]])  
         
         ana = AnaDataset(ilm.to_analysis())
         self.assertEqual(ana.partitions('index', distributed=False), 
