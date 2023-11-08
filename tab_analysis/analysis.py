@@ -263,6 +263,7 @@ class AnaRelation:
     - `distomin`
     - `distomax`
     - `distance`
+    - `parent_child`
     - `ratecpl`
     - `rateder`
     - `typecoupl`
@@ -678,7 +679,9 @@ class AnaDataset:
     *dynamic values (@property)*
 
     - `ana_relations`
+    - `category`
     - `root`
+    - `p_relations`
     - `primary`
     - `secondary`
     - `unique`
