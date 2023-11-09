@@ -143,7 +143,7 @@ class Test_AnaDataset(unittest.TestCase):
                      'location': 	["fr", "gb", "es", "ch", "gb", "fr", "es", "ch"],
                      'valid': ["ok", "ok", "ok", "ok", "ok", "ok", "ok", "ok"]}
         ilm = Sdataset.ntv(fruits) 
-        self.assertEqual(ilm._analysis.partitions('index'), [[0, 2, 5], [2, 5, 8], [0, 9], [2, 3], [8, 9], [7]])  
+        self.assertEqual(ilm.analysis.partitions('index'), [[0, 2, 5], [2, 5, 8], [0, 9], [2, 3], [8, 9], [7]])  
         
         ana = AnaDataset(ilm.to_analysis())
         self.assertEqual(ana.partitions('index', distributed=False), 
@@ -166,7 +166,7 @@ class Test_AnaDataset(unittest.TestCase):
         self.assertEqual(ilm.partitions, [[0]])
         ilm = Sdataset.from_ntv({'i0': ['a', 'b', 'c'], 'i1': [1, 2, 2], 
                                  'i2': [4, 5, 5], 'i3': [6, 7, 8], 'i4': [6, 7, 8]})
-        self.assertEqual(ilm._analysis.field_partition('index'), 
+        self.assertEqual(ilm.analysis.field_partition('index'), 
                          {'primary': [0], 'secondary': [1, 2, 3, 4], 'unique': [], 'variable': []})
         ilm = Sdataset.ntv([['math', 'english', 'software', 'physic', 'english', 'software'],
                          ['philippe', 'philippe', 'philippe',
