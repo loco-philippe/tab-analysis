@@ -78,7 +78,7 @@ IDDATASET = 'name'
 RELATIONS = 'relations'
 FIELDS = 'fields'
 LENGTH = 'length'
-
+HASHD = 'hashd'
 
 class AnaField:
     '''This class analyses field entities.
@@ -725,7 +725,7 @@ class AnaDataset:
             iddataset = fields.get(IDDATASET, None)
             leng = fields.get(LENGTH, None)
             relations = fields.get(RELATIONS, None)
-            hashd = fields.get(hashd)
+            hashd = fields.get(HASHD)
             fields = fields.get(FIELDS, None)
         self.iddataset = iddataset
         self.fields = [AnaDfield(AnaField(field), self)
