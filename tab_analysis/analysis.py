@@ -312,7 +312,7 @@ class AnaRelation:
             hash(self.dist) + hash(self.hashr) + hash(self.distrib)
 
     def to_dict(self, distances=False, full=False, mode='field', relation=False,
-                notnone=True):
+                notnone=True, misc=False):
         '''return a dict with AnaRelation attributes.
 
          *Parameters*
@@ -323,16 +323,16 @@ class AnaRelation:
         - **notnone** : boolean (default True) - if True, None values are not included
         - **mode** : str (default 'field') - AnaDfield representation ('field', 'id', 'index')
         '''
-        dic = {DIST: self.dist, HASHR: self.hashr}
+        dic = {DIST: self.dist, TYPECOUPL: self.typecoupl, HASHR: self.hashr}
         if relation or full:
             dic[RELATION] = Util.view(self.relation, mode) 
-            dic[TYPECOUPL] = self.typecoupl
+            #dic[TYPECOUPL] = self.typecoupl
             dic[PARENTCHILD] = self.parent_child
         if distances or full:
             dic |= {DISTANCE: self.distance, DISTOMIN: self.distomin,
                     DISTOMAX: self.distomax, DISTRIBUTED: self.distrib,
                     RATECPL: self.ratecpl, RATEDER: self.rateder}
-        if full:
+        if misc or full:
             dic |= {DMAX: self.dmax, DMIN: self.dmin,
                     DIFF: self.diff, DRAN: self.dran}
         if notnone:
@@ -348,9 +348,13 @@ class AnaRelation:
 
     @property 
     def parent_child(self):
-        return (self.relation[0].lencodec > self.relation[1].lencodec or 
-                (self.relation[0].lencodec == self.relation[1].lencodec and 
-                 self.relation[0].index < self.relation[1].index))
+        rel0 = self.relation[0]
+        rel1 = self.relation[1]
+        #if isinstance(rel0, AnaDfield) and isinstance(rel1, AnaDfield):
+        return (rel0.lencodec > rel1.lencodec or 
+                (rel0.lencodec == rel1.lencodec and rel0.index < rel1.index))
+        #return None
+    
     @property
     def index_relation(self):
         '''return a list with the index of the two fields involved'''
