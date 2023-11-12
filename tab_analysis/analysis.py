@@ -849,7 +849,8 @@ class AnaDataset:
         if isinstance(fld, str):
             if fld in [dfld.idfield for dfld in self.fields]:
                 return [dfld for dfld in self.fields if dfld.idfield == fld][0]
-            return self.root
+            #return self.root
+            return None
         return AnaDfield(fld, self)
 
     def tree(self, mode='derived', width=5, lname=20, string=True):
