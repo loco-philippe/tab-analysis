@@ -690,6 +690,7 @@ class AnaDataset:
     - `secondary`
     - `unique`
     - `variable`
+    - `complete`
     - `dimension`
 
     *instance methods*
@@ -784,6 +785,11 @@ class AnaDataset:
         '''return the first partition of the partitions'''
         part = self.partitions(distributed=True)
         return part[0] if part else []
+
+    @property
+    def complete(self):
+        '''return True if the dimension is not 0'''
+        return self.dimension > 0
 
     @property
     def dimension(self):
