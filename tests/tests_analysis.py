@@ -9,9 +9,7 @@ import unittest
 from tab_analysis import AnaField, AnaRelation, AnaDataset, AnaDfield
 from tab_analysis import ROOT, ROOTED, DERIVED, COUPLED
 from tab_analysis import NULL, UNIQUE, COMPLETE, FULL, DEFAULT, MIXED
-from observation.cdataset import Cdataset
-from observation.cfield import Cfield
-from observation import Sdataset
+from tab_dataset import Cdataset, Cfield, Sdataset
 
 """
 il = Dataset.ntv([[1, 2, 3, 4, 5, 6],               root coupled
@@ -104,9 +102,9 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
                          [COMPLETE, DEFAULT, DEFAULT, DEFAULT, DEFAULT])
         self.assertEqual([fld.p_distance for fld in dts.fields], 
                          [dts.root, dts.root, dts.fields[1], dts.fields[2], dts.fields[3]])
-        self.assertEqual([fld.list_parents() for fld in dts.fields], 
+        self.assertEqual([fld.ascendants() for fld in dts.fields], 
                          [[], [], [dts.fields[1]], [], [dts.fields[3]]])
-        self.assertEqual([fld.list_parents('distance') for fld in dts.fields], 
+        self.assertEqual([fld.ascendants('distance') for fld in dts.fields], 
                          [[], [], [dts.fields[1]], [dts.fields[2], dts.fields[1]],
                           [dts.fields[3], dts.fields[2], dts.fields[1]]])
 
@@ -118,7 +116,10 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
         self.assertEqual(dts.tree('distance', string=False), {'-1': ['root-distance (6)',
           {'0 ': ['i0 (0 - 6)']},
           {'1 ': ['i1 (3 - 3)',
-            {'2 ': ['i2 (1 - 2)', {'3 ': ['i3 (2 - 2)', {'4 ': ['i4 (0 - 2)']}]}]}]}]})
+          {'2 ': ['i2 (1 - 2)', {'3 ': ['i3 (2 - 2)', {'4 ': ['i4 (0 - 2)']}]}]}]}]})
+        self.assertEqual(dts.tree('distomin', string=False), {'-1': ['root-distomin (6)',
+          {'0 ': ['i0 (0 - 6)', {'1 ': ['i1 (0 - 3)']}, {'2 ': ['i2 (0 - 2)']},
+          {'3 ': ['i3 (0 - 2)']}, {'4 ': ['i4 (0 - 2)']}]}]})
 
     def test_partitions(self):
         self.assertEqual(dts.partitions('index', distributed=False), [[1, 3], [0]])

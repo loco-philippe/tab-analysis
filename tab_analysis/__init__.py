@@ -2,10 +2,6 @@
 """
 ***TAB-analysis Package***
 
-Created on Oct 2023
-
-@author: philippe@loco-labs.io
-
 This package contains the following classes and functions:
 
 - module `tab-analysis.tab_analysis.analysis` :
@@ -17,7 +13,9 @@ This package contains the following classes and functions:
     - `tab-analysis.tab_analysis.analysis.Util`
     - `tab-analysis.tab_analysis.analysis.AnaError`
     
-    
+For more information, see the
+[user guide](https://loco-philippe.github.io/tab-analysis/docs/user_guide.html)
+or the [github repository](https://github.com/loco-philippe/tab-analysis).   
 """
 from tab_analysis.analysis import AnaField, AnaRelation, AnaDataset, AnaDfield, Util
 from tab_analysis.analysis import ROOT, ROOTED, DERIVED, COUPLED
