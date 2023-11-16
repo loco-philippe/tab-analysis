@@ -999,6 +999,8 @@ class AnaDataset:
             if not partitions:
                 return {'primary': [], 'secondary': [], 'unique': [], 'variable': []}
             partition = partitions[0]
+        else:
+            partition = [self.dfield(fld) for fld in partition]
         secondary = []
         for field in partition:
             self._add_child(field, secondary)
