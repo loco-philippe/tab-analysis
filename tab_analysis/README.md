@@ -17,7 +17,7 @@ The `tab_analysis` package includes
 
 It can be installed with `pip`.
 
-    pip install ntv_analysis
+    pip install tab_analysis
 
 dependency:
 

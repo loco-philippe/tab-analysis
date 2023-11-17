@@ -543,7 +543,7 @@ class AnaDfield(AnaField):
 
     @property
     def p_derived(self):
-        '''return the derived or coupled parent of the AnaDfield'''
+        '''return the first derived or coupled parent of the AnaDfield'''
         if self.category in (UNIQUE, ROOTED):
             return self.dataset.root
         if self.category == COUPLED:
@@ -562,12 +562,12 @@ class AnaDfield(AnaField):
 
     @property
     def p_distance(self):
-        '''return the parent with minimal distance of the AnaDfield'''
+        '''return the first parent with minimal distance of the AnaDfield'''
         return self.p_min_dist()
 
     @property
     def p_distomin(self):
-        '''return the parent with minimal distomin of the AnaDfield'''
+        '''return the first parent with minimal distomin of the AnaDfield'''
         return self.p_min_dist(False)
 
     def p_min_dist(self, distance=True):
