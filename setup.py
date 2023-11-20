@@ -14,7 +14,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 setup(
     name="tab_analysis",
     version="0.0.1",
-    description="TAB-analysis : A tabular relationship analysis",
+    description="TAB-analysis : A tool to Analyse tabular and multi-dimensionnal structures",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/loco-philippe/tab-analysis/blob/main/README.md",
