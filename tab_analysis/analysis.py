@@ -456,7 +456,6 @@ class AnaDfield(AnaField):
     *other instance methods*
 
     - `dic_inner_node`
-    - `p_min_dist`
     '''
     def __new__(cls, other, dataset=None):
         '''initialization of attributes from "other"'''
@@ -563,15 +562,17 @@ class AnaDfield(AnaField):
     @property
     def p_distance(self):
         '''return the first parent with minimal distance of the AnaDfield'''
-        return self.p_min_dist()
+        return self._p_min_dist()
 
     @property
     def p_distomin(self):
         '''return the first parent with minimal distomin of the AnaDfield'''
-        return self.p_min_dist(False)
+        return self._p_min_dist(False)
 
-    def p_min_dist(self, distance=True):
+    def _p_min_dist(self, distance=True):
         '''return the parent with minimal distance of the AnaDfield'''
+        if self.category == UNIQUE:
+            return self.dataset.root
         if distance:
             dist_up = [rel.distance for rel in self.list_relations if
                        not rel.parent_child]
