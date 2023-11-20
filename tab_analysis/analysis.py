@@ -114,6 +114,20 @@ class AnaField:
         - **mincodec** : integer (default None) - number of different values
         - **maxcodec** : integer (default None) - length of the field
         - **hashf** : string (default None) - update identifier
+        
+        *example*
+        
+        AnaField is created with a dict
+        >>> AnaField(Cfield([1,2,3,3]).to_analysis).to_dict()
+        {'lencodec': 4, 'mincodec': 3, 'maxcodec': 4}
+        >>> AnaField({'lencodec': 4, 'mincodec': 3, 'maxcodec': 4})
+        {'lencodec': 4, 'mincodec': 3, 'maxcodec': 4}
+        
+        AnaField is created with parameters
+        >>> AnaField(lencodec=4, mincodec=3, maxcodec=4).to_dict()
+        {'lencodec': 4, 'mincodec': 3, 'maxcodec': 4}        
+        >>> AnaField(4, 3, 4).to_dict()
+        {'lencodec': 4, 'mincodec': 3, 'maxcodec': 4}
         '''
         if isinstance(idfield, dict):
             self.idfield = idfield.get(IDFIELD, None)
