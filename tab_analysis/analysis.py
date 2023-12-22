@@ -689,7 +689,8 @@ class AnaDfield(AnaField):
         lis = [name.replace(' ', '*').replace("'", '*')]
         if mode == 'derived':
             childs = []
-            if not self.category in (ROOTED, COUPLED):
+            #if not self.category in (ROOTED, COUPLED):
+            if not self.category in (ROOTED, COUPLED, UNIQUE):
                 for rel in self.list_coupled:
                     lis.append(rel.relation[1].dic_inner_node(mode, lname))
             if not self.category in (ROOTED, UNIQUE):
