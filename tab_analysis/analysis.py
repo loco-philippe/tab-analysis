@@ -157,7 +157,7 @@ class AnaField:
 
     def __repr__(self):
         '''representation of the field (class name + idfield)'''
-        return self.__class__.__name__ + '(' + self.idfield + ')'
+        return self.__class__.__name__ + '(' + str(self.idfield) + ')'
 
     def __eq__(self, other):
         ''' equal if class and attributes are equal'''
@@ -685,7 +685,7 @@ class AnaDfield(AnaField):
             rel_parent = self.dataset.get_relation(self, self.p_derived)
             adding = str(rel_parent.distance) + ' - '
         adding += str(self.lencodec)
-        name = self.idfield[:lname] + ' (' + adding + ')'
+        name = str(self.idfield)[:lname] + ' (' + adding + ')'
         lis = [name.replace(' ', '*').replace("'", '*')]
         if mode == 'derived':
             childs = []
