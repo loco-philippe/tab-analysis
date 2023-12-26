@@ -1094,9 +1094,14 @@ class Util:
 
     @staticmethod
     def reduce_dic(obj):
-        '''return a dict without empty or None values'''
-        return {key: val for key, val in obj.items() if not val is None}
-
+        '''return a dict without None values'''
+        if isinstance(obj, dict):
+            return {key: Util.reduce_dic(val) for key, val in obj.items() 
+                    if not val is None}
+        if isinstance(obj, list):
+            return [Util.reduce_dic(val) for val in obj]
+        return obj
+    
     @staticmethod
     def clean_dic(obj, old, new):
         '''return a dict or list with updated strings by replacing "old" substring
