@@ -48,6 +48,10 @@ In [1]: # creation of the `analysis` object
                    'product':  ['apple', 'apple', 'orange', 'orange', 'peppers', 'peppers', 'carrot',   'carrot'    ], 
                    'price':    [1,       10,      2,        20,       1.5,       15,        0.5,        5           ]}
         analysis = AnaDataset(Sdataset.ntv(tabular).to_analysis(True))
+        # `analysis` is also available from pandas data
+        import pandas as pd
+        import ntv_pandas as npd
+        analysis = pd.DataFrame(tabular).npd.analysis()
 
 In [2]: # each relationship is evaluated and measured 
         analysis.get_relation('plants', 'product').typecoupl
