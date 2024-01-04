@@ -6,7 +6,7 @@ The documentation presents :
 
 - [NTV-TAB specification](https://loco-philippe.github.io/ES/NTV%20tabular%20format%20(NTV-TAB).htm) (Json for tabular data)
 - [tabular analysis](https://github.com/loco-philippe/tab-analysis/tree/main/docs/tabular_analysis.pdf): principles and concepts
-
+- [tabular relationships](https://github.com/loco-philippe/Environmental-Sensing/blob/main/property_relationship/README.md)
 
 ## Python Connectors documentation
 

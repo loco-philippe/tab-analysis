@@ -7,3 +7,9 @@ Version x.y.z
 - indicators for fields and datasets
 - partitions identification
 - dataset tree representation 
+
+0.1.1 RC1 (2024-01-04)
+--------------------
+- add connectot with pandas DataFrame
+- bugs : #1, #2, #3
+- update documenation
