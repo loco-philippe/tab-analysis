@@ -6,6 +6,8 @@ Created on Mon Apr 15 10:59:39 2024
 """
 import xarray as xr
 import numpy as np
+import ntv_pandas as npd
+from analysis import Util
 
 ds = xr.Dataset(
     {"foo": (("x", "y", "year"), np.random.randn(2, 3, 2))},
@@ -19,7 +21,7 @@ ds = xr.Dataset(
     })
 df = ds.to_dataframe().reset_index()
 ana = df.npd.analysis(distr=True)
-print(ana.field_partition(mode='id'))
+print(Util.reduce_dic(ana.field_partition(mode='id')))
 print(ana.partitions(mode='id'))
 
 ds = xr.Dataset(
@@ -34,5 +36,5 @@ ds = xr.Dataset(
     })
 df = ds.to_dataframe().reset_index()
 ana = df.npd.analysis(distr=True)
-print(ana.field_partition(mode='id'))
+print(Util.reduce_dic(ana.field_partition(mode='id'), notempty=True))
 print(ana.partitions(mode='id'))

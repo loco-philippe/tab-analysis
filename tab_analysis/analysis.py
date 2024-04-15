@@ -1010,22 +1010,26 @@ class AnaDataset:
         - **partition** : list (default None) - if None, partition is the first
         - **distributed** : boolean (default True) - Include only distributed fields
         '''
+        partitions = self.partitions(distributed=distributed)
+        part_fld = {fld for part in partitions if len(part) >1 for fld in part}
         if not partition:
-            partitions = self.partitions(distributed=distributed)
             if not partitions:
                 return {'primary': [], 'secondary': [], 'unique': [], 'variable': []}
             partition = partitions[0]
         else:
-            partition = [self.dfield(fld) for fld in partition]
+            #partition = [self.dfield(fld) for fld in partition]
+            partition = [self.dfield(fld) for fld in tuple(sorted(partition))]
         secondary = []
         for field in partition:
             self._add_child(field, secondary)
         secondary = [fld for fld in secondary if not fld in partition]
         unique = [fld for fld in self.fields if fld.category == UNIQUE]
+        mixte = [fld for fld in part_fld if not fld in partition + secondary]
         variable = [fld for fld in self.fields
-                    if not fld in partition + secondary + unique]
+                    if not fld in partition + secondary + unique + mixte]
         return Util.view({'primary': partition, 'secondary': secondary,
-                          'unique': unique, 'variable': variable}, mode)
+                          'mixte': mixte, 'unique': unique, 
+                          'variable': variable}, mode)
 
     def indicator(self, fullsize, size):
         '''generate size indicators: ol (object lightness), ul (unicity level),
@@ -1093,11 +1097,11 @@ class Util:
         return field_struc
 
     @staticmethod
-    def reduce_dic(obj):
+    def reduce_dic(obj, notempty=False):
         '''return a dict without None values'''
         if isinstance(obj, dict):
             return {key: Util.reduce_dic(val) for key, val in obj.items() 
-                    if not val is None}
+                    if not val is None and (not notempty or val)}
         if isinstance(obj, list):
             return [Util.reduce_dic(val) for val in obj]
         return obj
