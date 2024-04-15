@@ -763,8 +763,21 @@ class AnaDataset:
         - single AnaDataset attribute to make a copy
         - multiple attributes
 
-         *Parameters (multiple attributes)*
-
+        *Parameters (single dict)*
+        
+        - **fields**: {'fields': list_of_fields, 'name': id_dataset, 
+                       'length': length, 'relations': {field : {field_other: dist}}}
+            where:
+                list_of_fields : list of field names
+                id_dataset : name of the dataset
+                length: length of the dataset
+                field: name of a field
+                field_other: name of another field
+                dist: integer distance between the two fields or array with distance and boolean distributed
+                
+        *Parameters (multiple attributes)*
+        
+        - **fields**: list of dict (idfield : { lencodec: int, mincodec: int, })
         - **idfield** : string or integer - Id of the Field
         - **lencodec** : integer (default None) - length of the codec
         - **mincodec** : integer (default None) - number of different values
