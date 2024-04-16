@@ -765,24 +765,29 @@ class AnaDataset:
 
         *Parameters (single dict)*
         
-        - **fields**: {'fields': list_of_fields, 'name': id_dataset, 
-                       'length': length, 'relations': {field : {field_other: dist}}}
+        - **fields**: {'fields': list_of_dict, 'name': id_dataset, 
+                       'length': length, 'relations': dict_of_relations
             where:
-                list_of_fields : list of field names
+                list_of_dict : {'id': id_field, 'lencodec': len_codec, 'mincodec': min_codec}
+                id_field: string - name of field
+                other_field: string - name of field
+                len_codec: int - length of the codec
+                min_codec: int - number of different codec values
                 id_dataset : name of the dataset
-                length: length of the dataset
+                length: int - length of the dataset
+                dict_of_relations: {id_field : {other_field: dist} for all fields}
                 field: name of a field
                 field_other: name of another field
-                dist: integer distance between the two fields or array with distance and boolean distributed
+                dist: integer (distance between the two fields) or 
+                array (distance and boolean distributed)
                 
         *Parameters (multiple attributes)*
         
-        - **fields**: list of dict (idfield : { lencodec: int, mincodec: int, })
-        - **idfield** : string or integer - Id of the Field
-        - **lencodec** : integer (default None) - length of the codec
-        - **mincodec** : integer (default None) - number of different values
-        - **maxcodec** : integer (default None) - length of the field
-        - **hashf** : string (default None) - update identifier
+        - **fields**: list_of_dict 
+        - **iddataset** : string (default None) - id_dataset
+        - **relations** : dict (default None) - dict_of_relations
+        - **leng** : int (default None) - length
+        - **hashd** : string (default None) - update identifier
         '''
         if isinstance(fields, AnaDataset):
             self.iddataset = fields.iddataset
