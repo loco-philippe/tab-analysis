@@ -1048,12 +1048,13 @@ class AnaDataset:
                           'mixte': mixte, 'unique': unique, 
                           'variable': variable}, mode)
 
-    def relation_partition(self, partition=None):
+    def relation_partition(self, partition=None, primary=False):
         '''return a dict with the list of relationships for fields in a partition.
 
         *Parameters*
 
         - **partition** : list (default None) - if None, partition is the first
+        - **primary** : boolean (default False) - if True, relations are primary fields
         '''
         part = self.field_partition(partition=partition, distributed=True)
         fields = {fld: cat for cat, l_fld in part.items() for fld in l_fld}
@@ -1066,8 +1067,10 @@ class AnaDataset:
                 case 'unique':...
                 case 'variable':
                     rel = [fld.idfield for fld in part['primary']]
-                case 'secondary':
-                    rel = [field.p_derived.idfield]
+                case 'secondary' if not primary:
+                    rel = [field.p_derived.idfield] 
+                case 'secondary' if primary:
+                    rel = [fld.idfield for fld in field.ascendants() if fld in part['primary']] 
                 case _:
                     self._add_child(field, rel)
                     rel = [fld.idfield for fld in rel if fld in part['primary']]
