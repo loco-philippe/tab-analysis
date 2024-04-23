@@ -1055,16 +1055,23 @@ class AnaDataset:
 
         - **partition** : list (default None) - if None, partition is the first
         '''
-        part = self.field_partition(mode='id', partition=partition, distributed=True)
+        part = self.field_partition(partition=partition, distributed=True)
         fields = {fld: cat for cat, l_fld in part.items() for fld in l_fld}
         relations = {}
         for field in fields:
+            rel = []
             match fields[field]:
                 case 'primary':
-                    rel = [field]
-                case 'unique':
-                    rel = []
-            relations[field] = rel
+                    rel = [field.idfield]
+                case 'unique':...
+                case 'variable':
+                    rel = [fld.idfield for fld in part['primary']]
+                case 'secondary':
+                    rel = [field.p_derived.idfield]
+                case _:
+                    self._add_child(field, rel)
+                    rel = [fld.idfield for fld in rel if fld in part['primary']]
+            relations[field.idfield] = rel
         return relations
     
     def indicator(self, fullsize, size):
