@@ -1021,7 +1021,7 @@ class AnaDataset:
         '''return a partition dict with the list of primary, secondary, unique
         and variable fields.
 
-         *Parameters*
+        *Parameters*
 
         - **mode** : str (default 'field') - AnaDfield representation
         ('field', 'id', 'index')
@@ -1035,7 +1035,6 @@ class AnaDataset:
                 return {'primary': [], 'secondary': [], 'unique': [], 'variable': []}
             partition = partitions[0]
         else:
-            #partition = [self.dfield(fld) for fld in partition]
             partition = [self.dfield(fld) for fld in tuple(sorted(partition))]
         secondary = []
         for field in partition:
@@ -1049,6 +1048,25 @@ class AnaDataset:
                           'mixte': mixte, 'unique': unique, 
                           'variable': variable}, mode)
 
+    def relation_partition(self, partition=None):
+        '''return a dict with the list of relationships for fields in a partition.
+
+        *Parameters*
+
+        - **partition** : list (default None) - if None, partition is the first
+        '''
+        part = self.field_partition(mode='id', partition=partition, distributed=True)
+        fields = {fld: cat for cat, l_fld in part.items() for fld in l_fld}
+        relations = {}
+        for field in fields:
+            match fields[field]:
+                case 'primary':
+                    rel = [field]
+                case 'unique':
+                    rel = []
+            relations[field] = rel
+        return relations
+    
     def indicator(self, fullsize, size):
         '''generate size indicators: ol (object lightness), ul (unicity level),
         gain (sizegain)
