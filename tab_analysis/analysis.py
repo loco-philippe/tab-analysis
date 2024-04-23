@@ -741,7 +741,6 @@ class AnaDataset:
 
     - `set_relations`
 
-
     *access (instance methods)*
 
     - `get_relation`
@@ -754,6 +753,7 @@ class AnaDataset:
     - `indicator`
     - `partitions`
     - `field_partition`
+    - `relation_partition`
     '''
 
     def __init__(self, fields=None, relations=None, iddataset=None,
