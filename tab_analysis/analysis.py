@@ -114,18 +114,18 @@ class AnaField:
         - **mincodec** : integer (default None) - number of different values
         - **maxcodec** : integer (default None) - length of the field
         - **hashf** : string (default None) - update identifier
-        
+
         *example*
-        
+
         AnaField is created with a dict
         >>> AnaField(Cfield([1,2,3,3]).to_analysis).to_dict()
         {'lencodec': 4, 'mincodec': 3, 'maxcodec': 4}
         >>> AnaField({'lencodec': 4, 'mincodec': 3, 'maxcodec': 4})
         {'lencodec': 4, 'mincodec': 3, 'maxcodec': 4}
-        
+
         AnaField is created with parameters
         >>> AnaField(lencodec=4, mincodec=3, maxcodec=4).to_dict()
-        {'lencodec': 4, 'mincodec': 3, 'maxcodec': 4}        
+        {'lencodec': 4, 'mincodec': 3, 'maxcodec': 4}
         >>> AnaField(4, 3, 4).to_dict()
         {'lencodec': 4, 'mincodec': 3, 'maxcodec': 4}
         '''
@@ -338,7 +338,6 @@ class AnaRelation:
         dic = {DIST: self.dist, TYPECOUPL: self.typecoupl, HASHR: self.hashr}
         if relation or full:
             dic[RELATION] = Util.view(self.relation, mode)
-            #dic[TYPECOUPL] = self.typecoupl
             dic[PARENTCHILD] = self.parent_child
         if distances or full:
             dic |= {DISTANCE: self.distance, DISTOMIN: self.distomin,
@@ -363,10 +362,8 @@ class AnaRelation:
         '''returns the direction of the relationship (True if parent is first)'''
         rel0 = self.relation[0]
         rel1 = self.relation[1]
-        # if isinstance(rel0, AnaDfield) and isinstance(rel1, AnaDfield):
         return (rel0.lencodec > rel1.lencodec or
                 (rel0.lencodec == rel1.lencodec and rel0.index < rel1.index))
-        # return None
 
     @property
     def index_relation(self):
@@ -590,22 +587,18 @@ class AnaDfield(AnaField):
         if distance:
             dist_up = [rel.distance for rel in self.list_relations if
                        not rel.parent_child]
-            # not rel.parent_child and rel.relation[1].category != COUPLED]
         else:
             dist_up = [rel.distomin for rel in self.list_relations if
                        not rel.parent_child]
-            # not rel.parent_child and rel.relation[1].category != COUPLED]
         if not dist_up or min(dist_up) == self.dist_root:
             return self.dataset.root
         dist_min = min(dist_up)
         if distance:
             list_dmin = [rel.relation[1] for rel in self.list_relations
                          if rel.distance == dist_min]
-            # if rel.distance == dist_min and not rel.parent_child]
         else:
             list_dmin = [rel.relation[1] for rel in self.list_relations
                          if rel.distomin == dist_min]
-            # if rel.distomin == dist_min and not rel.parent_child]
         max_lencodec = max(fld.lencodec for fld in list_dmin)
         return [fld for fld in list_dmin if fld.lencodec == max_lencodec][0]
 
@@ -616,7 +609,7 @@ class AnaDfield(AnaField):
 
         - **mode** : str (default 'id') - AnaDfield representation ('field', 'id', 'index')
         '''
-        dic = super().to_dict(full=True, notnone=False)
+        dic = super().to_dict(full=True, idfield=False, notnone=False)
         dic[DISTROOT] = self.dist_root
         dic[NUM] = self.index
         dic[CATEGORY] = self.category
@@ -689,7 +682,6 @@ class AnaDfield(AnaField):
         lis = [name.replace(' ', '*').replace("'", '*')]
         if mode == 'derived':
             childs = []
-            #if not self.category in (ROOTED, COUPLED):
             if not self.category in (ROOTED, COUPLED, UNIQUE):
                 for rel in self.list_coupled:
                     lis.append(rel.relation[1].dic_inner_node(mode, lname))
@@ -764,8 +756,8 @@ class AnaDataset:
         - multiple attributes
 
         *Parameters (single dict)*
-        
-        - **fields**: {'fields': list_of_dict, 'name': id_dataset, 
+
+        - **fields**: {'fields': list_of_dict, 'name': id_dataset,
                        'length': length, 'relations': dict_of_relations
             where:
                 list_of_dict : {'id': id_field, 'lencodec': len_codec, 'mincodec': min_codec}
@@ -778,12 +770,12 @@ class AnaDataset:
                 dict_of_relations: {id_field : {other_field: dist} for all fields}
                 field: name of a field
                 field_other: name of another field
-                dist: integer (distance between the two fields) or 
+                dist: integer (distance between the two fields) or
                 array (distance and boolean distributed)
-                
+
         *Parameters (multiple attributes)*
-        
-        - **fields**: list_of_dict 
+
+        - **fields**: list_of_dict
         - **iddataset** : string (default None) - id_dataset
         - **relations** : dict (default None) - dict_of_relations
         - **leng** : int (default None) - length
@@ -924,7 +916,6 @@ class AnaDataset:
         if isinstance(fld, str):
             if fld in [dfld.idfield for dfld in self.fields]:
                 return [dfld for dfld in self.fields if dfld.idfield == fld][0]
-            # return self.root
             return None
         return AnaDfield(fld, self)
 
@@ -994,7 +985,6 @@ class AnaDataset:
         '''
         partit = [[fld] for fld in self.fields if fld.category == ROOTED]
         crossed = [rel for rel in self.ana_relations if rel.typecoupl == CROSSED
-                   # and rel.relation[1].index > rel.relation[0].index
                    and rel.parent_child
                    and rel.relation[0].category != COUPLED
                    and rel.relation[1].category != COUPLED]
@@ -1029,7 +1019,8 @@ class AnaDataset:
         - **distributed** : boolean (default True) - Include only distributed fields
         '''
         partitions = self.partitions(distributed=distributed)
-        part_fld = {fld for part in partitions if len(part) >1 for fld in part}
+        part_fld = {fld for part in partitions if len(
+            part) > 1 for fld in part}
         if not partition:
             if not partitions:
                 return {'primary': [], 'secondary': [], 'unique': [], 'variable': []}
@@ -1045,7 +1036,7 @@ class AnaDataset:
         variable = [fld for fld in self.fields
                     if not fld in partition + secondary + unique + mixte]
         return Util.view({'primary': partition, 'secondary': secondary,
-                          'mixte': mixte, 'unique': unique, 
+                          'mixte': mixte, 'unique': unique,
                           'variable': variable}, mode)
 
     def relation_partition(self, partition=None, primary=False):
@@ -1064,19 +1055,20 @@ class AnaDataset:
             match fields[field]:
                 case 'primary':
                     rel = [field.idfield]
-                case 'unique':...
+                case 'unique': ...
                 case 'variable':
                     rel = [fld.idfield for fld in part['primary']]
                 case 'secondary' if not primary:
-                    rel = [field.p_derived.idfield] 
+                    rel = [field.p_derived.idfield]
                 case 'secondary' if primary:
-                    rel = [fld.idfield for fld in field.ascendants() if fld in part['primary']] 
+                    rel = [fld.idfield for fld in field.ascendants()
+                           if fld in part['primary']]
                 case _:
                     self._add_child(field, rel)
                     rel = [fld.idfield for fld in rel if fld in part['primary']]
             relations[field.idfield] = rel
         return relations
-    
+
     def indicator(self, fullsize, size):
         '''generate size indicators: ol (object lightness), ul (unicity level),
         gain (sizegain)
@@ -1146,12 +1138,12 @@ class Util:
     def reduce_dic(obj, notempty=False):
         '''return a dict without None values'''
         if isinstance(obj, dict):
-            return {key: Util.reduce_dic(val) for key, val in obj.items() 
+            return {key: Util.reduce_dic(val) for key, val in obj.items()
                     if not val is None and (not notempty or val)}
         if isinstance(obj, list):
             return [Util.reduce_dic(val) for val in obj]
         return obj
-    
+
     @staticmethod
     def clean_dic(obj, old, new):
         '''return a dict or list with updated strings by replacing "old" substring
@@ -1188,4 +1180,3 @@ class Util:
 
 class AnaError(Exception):
     ''' Analysis Exception'''
-    # pass
