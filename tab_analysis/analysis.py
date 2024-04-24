@@ -672,7 +672,7 @@ class AnaDfield(AnaField):
             'distomin': min distomin tree
 
         *Returns* : dict where key is a AnaDfield and value is the list of
-        the childs.
+        the childs "name ( dist - lencodec)".
         '''
         adding = ''
         if mode == 'distance':
