@@ -821,7 +821,7 @@ class AnaDataset:
             sum(hash(rel) for rel in self.relations) + hash(self.hashd)
 
     @property
-    def category(self):
+    def category(self, dic=False):
         '''return a list of AnaDfield category (unique, rooted, coupled, derived, mixed)'''
         return [fld.category for fld in self.fields]
 
