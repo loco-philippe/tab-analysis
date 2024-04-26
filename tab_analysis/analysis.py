@@ -1048,11 +1048,11 @@ class AnaDataset:
         - **primary** : boolean (default False) - if True, relations are primary fields
         '''
         part = self.field_partition(partition=partition, distributed=True)
-        fields = {fld: cat for cat, l_fld in part.items() for fld in l_fld}
+        fields_cat = {fld: cat for cat, l_fld in part.items() for fld in l_fld}
         relations = {}
-        for field in fields:
+        for field in fields_cat:
             rel = []
-            match fields[field]:
+            match fields_cat[field]:
                 case 'primary':
                     rel = [field.idfield]
                 case 'unique': ...
@@ -1063,9 +1063,14 @@ class AnaDataset:
                 case 'secondary' if primary:
                     rel = [fld.idfield for fld in field.ascendants()
                            if fld in part['primary']]
-                case _:
-                    self._add_child(field, rel)
-                    rel = [fld.idfield for fld in rel if fld in part['primary']]
+                case 'mixte':
+                    '''self._add_child(field, rel)
+                    rel = [fld.idfield for fld in rel if fld in part['primary']]'''
+                    for prt in self.partitions():
+                        if field in prt:
+                            rel += [fld.idfield for fld in prt 
+                                    if self.dfield(fld.idfield) in part['primary']]
+                case _:...
             relations[field.idfield] = rel
         return relations
 
