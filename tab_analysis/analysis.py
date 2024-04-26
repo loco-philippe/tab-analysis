@@ -1056,7 +1056,7 @@ class AnaDataset:
                 case 'primary':
                     rel = [field.idfield]
                 case 'unique': ...
-                case 'variable':
+                case 'variable' | 'mixte':
                     rel = [fld.idfield for fld in part['primary']]
                 case 'secondary' if not primary:
                     rel = [field.p_derived.idfield]
@@ -1068,9 +1068,9 @@ class AnaDataset:
                     rel = [fld.idfield for fld in rel if fld in part['primary']]
                     '''for prt in self.partitions():
                         if field in prt:
-                            rel += [fld.idfield for fld in prt 
+                            rel += [fld.idfield for fld in prt
                                     if self.dfield(fld.idfield) in part['primary']]'''
-                case _:...
+                case _: ...
             relations[field.idfield] = rel
         return relations
 

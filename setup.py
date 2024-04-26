@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Sep 19 2023
-
-@author: philippe@loco-labs.io
+`tab_analysis` setup
 """
 
 import pathlib
@@ -13,8 +11,8 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="tab_analysis",
-    version="0.1.1",
-    description="TAB-analysis : A tool to Analyse tabular and multi-dimensionnal structures",
+    version="0.2.0",
+    description="TAB-analysis : A tool to analyse tabular and multi-dimensionnal structures",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/loco-philippe/tab-analysis/blob/main/README.md",
