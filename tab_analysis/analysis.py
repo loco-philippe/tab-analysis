@@ -1019,8 +1019,8 @@ class AnaDataset:
         - **distributed** : boolean (default True) - Include only distributed fields
         '''
         partitions = self.partitions(distributed=distributed)
-        part_fld = {fld for part in partitions if len(
-            part) > 1 for fld in part}
+        #part_fld = {fld for part in partitions if len(
+        #    part) > 1 for fld in part}
         if not partition:
             if not partitions:
                 return {'primary': [], 'secondary': [], 'unique': [], 'variable': []}
@@ -1032,7 +1032,8 @@ class AnaDataset:
             self._add_child(field, secondary)
         secondary = [fld for fld in secondary if not fld in partition]
         unique = [fld for fld in self.fields if fld.category == UNIQUE]
-        mixte = [fld for fld in part_fld if not fld in partition + secondary]
+        mixte = list(self._mixte_dims(partition, partitions))
+        #mixte = [fld for fld in part_fld if not fld in partition + secondary]
         variable = [fld for fld in self.fields
                     if not fld in partition + secondary + unique + mixte]
         return Util.view({'primary': partition, 'secondary': secondary,
@@ -1047,6 +1048,8 @@ class AnaDataset:
         - **partition** : list (default None) - if None, partition is the first
         - **primary** : boolean (default False) - if True, relations are primary fields
         '''
+        partition = partition if partition else self.partitions(mode='id')[0]
+        partitions = self.partitions(mode='id')
         part = self.field_partition(partition=partition, distributed=True)
         fields_cat = {fld: cat for cat, l_fld in part.items() for fld in l_fld}
         relations = {}
@@ -1056,7 +1059,8 @@ class AnaDataset:
                 case 'primary':
                     rel = [field.idfield]
                 case 'unique': ...
-                case 'variable' | 'mixte':
+                #case 'variable' | 'mixte':
+                case 'variable':
                     rel = [fld.idfield for fld in part['primary']]
                 case 'secondary' if not primary:
                     rel = [field.p_derived.idfield]
@@ -1064,12 +1068,15 @@ class AnaDataset:
                     rel = [fld.idfield for fld in field.ascendants()
                            if fld in part['primary']]
                 case 'mixte':
-                    self._add_child(field, rel)
+                    rel = self._mixte_dims(partition, partitions)[field.idfield]
+                    '''self._add_child(field, rel)
                     rel = [fld.idfield for fld in rel if fld in part['primary']]
+                    '''
                     '''for prt in self.partitions():
                         if field in prt:
                             rel += [fld.idfield for fld in prt
-                                    if self.dfield(fld.idfield) in part['primary']]'''
+                                    if self.dfield(fld.idfield) in part['primary']]
+                    rel = [idf for idf in partition if not idf in rel]'''
                 case _: ...
             relations[field.idfield] = rel
         return relations
@@ -1112,7 +1119,19 @@ class AnaDataset:
                 if not child.category in (COUPLED, UNIQUE):
                     self._add_child(child, childs)
 
-
+    def _mixte_dims(self, partition, partitions):
+        '''return dict with dimensions associated to each mixte field'''
+        dic_mixte= {}
+        for part in partitions:
+            not_part = [fld for fld in part if not fld in partition]
+            if len(not_part) == 1 and len(partition) > len(part) > 1:
+                sub_part = [fld for fld in partition if not fld in part]
+                if min(self.get_relation(not_part[0], fld).typecoupl == 'derived'
+                           for fld in sub_part) == True:               
+                    dic_mixte[not_part[0]] = sub_part  
+        return dic_mixte
+    
+    
 class Util:
     ''' common functions for analysis package'''
 
