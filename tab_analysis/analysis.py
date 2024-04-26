@@ -1064,12 +1064,12 @@ class AnaDataset:
                     rel = [fld.idfield for fld in field.ascendants()
                            if fld in part['primary']]
                 case 'mixte':
-                    '''self._add_child(field, rel)
-                    rel = [fld.idfield for fld in rel if fld in part['primary']]'''
-                    for prt in self.partitions():
+                    self._add_child(field, rel)
+                    rel = [fld.idfield for fld in rel if fld in part['primary']]
+                    '''for prt in self.partitions():
                         if field in prt:
                             rel += [fld.idfield for fld in prt 
-                                    if self.dfield(fld.idfield) in part['primary']]
+                                    if self.dfield(fld.idfield) in part['primary']]'''
                 case _:...
             relations[field.idfield] = rel
         return relations
