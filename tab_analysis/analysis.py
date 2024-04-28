@@ -1015,12 +1015,11 @@ class AnaDataset:
 
         - **mode** : str (default 'field') - AnaDfield representation
         ('field', 'id', 'index')
-        - **partition** : list (default None) - if None, partition is the first
+        - **partition** : list of str, int, AnaDfield or AnaField(default None) - 
+        if None, partition is the first
         - **distributed** : boolean (default True) - Include only distributed fields
         '''
         partitions = self.partitions(distributed=distributed)
-        #part_fld = {fld for part in partitions if len(
-        #    part) > 1 for fld in part}
         if not partition:
             if not partitions:
                 return {'primary': [], 'secondary': [], 'unique': [], 'variable': []}
@@ -1048,8 +1047,10 @@ class AnaDataset:
         - **partition** : list (default None) - if None, partition is the first
         - **primary** : boolean (default False) - if True, relations are primary fields
         '''
-        partition = partition if partition else self.partitions(mode='id')[0]
-        partitions = self.partitions(mode='id')
+        #partition = partition if partition else self.partitions(mode='id')[0]
+        partition = partition if partition else self.partitions()[0]
+        #partitions = self.partitions(mode='id')
+        partitions = self.partitions()
         part = self.field_partition(partition=partition, distributed=True)
         fields_cat = {fld: cat for cat, l_fld in part.items() for fld in l_fld}
         relations = {}
@@ -1068,7 +1069,8 @@ class AnaDataset:
                     rel = [fld.idfield for fld in field.ascendants()
                            if fld in part['primary']]
                 case 'mixte':
-                    rel = self._mixte_dims(partition, partitions)[field.idfield]
+                    #rel = self._mixte_dims(partition, partitions)[field.idfield]
+                    rel = [fld.idfield for fld in self._mixte_dims(partition, partitions)[field]]
                     '''self._add_child(field, rel)
                     rel = [fld.idfield for fld in rel if fld in part['primary']]
                     '''
@@ -1129,6 +1131,7 @@ class AnaDataset:
                 if min(self.get_relation(not_part[0], fld).typecoupl == 'derived'
                            for fld in sub_part) == True:               
                     dic_mixte[not_part[0]] = sub_part  
+                    #dic_mixte[not_part[0].idfield] = [fld.idfield for fld in sub_part]  
         return dic_mixte
     
     
