@@ -1047,10 +1047,11 @@ class AnaDataset:
         - **partition** : list (default None) - if None, partition is the first
         - **primary** : boolean (default False) - if True, relations are primary fields
         '''
-        #partition = partition if partition else self.partitions(mode='id')[0]
-        partition = partition if partition else self.partitions()[0]
-        #partitions = self.partitions(mode='id')
         partitions = self.partitions()
+        if not partitions:
+            partition = None
+        else:
+            partition = Util.view(partition, mode='field', ana=self) if partition else partitions[0]
         part = self.field_partition(partition=partition, distributed=True)
         fields_cat = {fld: cat for cat, l_fld in part.items() for fld in l_fld}
         relations = {}
@@ -1139,27 +1140,27 @@ class Util:
     ''' common functions for analysis package'''
 
     @staticmethod
-    def view(field_struc, mode):
-        ''' return a representation of a AnaDfields structure (fields, id, index).
+    def view(field_struc, mode, ana=None):
+        ''' return a representation of a AnaDfields structure (field, id, index).
 
          *Parameters*
 
         - **mode** : str - AnaDfield representation ('field', 'id', 'index')
         - **field_struc** : list or dict - structure to represent
+        - **ana** : AnaDataset (default None) - to convert string or index in AnaDfield
         '''
-        if mode is None or mode == 'field' or not field_struc:
+        
+        if mode is None or not field_struc:
             return field_struc
         if isinstance(field_struc, dict):
-            return {key: [fld.idfield if mode == 'id' else fld.index for fld in val]
+            return {key: Util.view(val, mode=mode, ana=ana)
                     for key, val in field_struc.items()}
-        if isinstance(field_struc, list) and isinstance(field_struc[0], list):
-            return [[fld.idfield if mode == 'id' else fld.index for fld in val]
-                    for val in field_struc]
         if isinstance(field_struc, list):
-            return [fld.idfield if mode == 'id' else fld.index for fld in field_struc]
-        if isinstance(field_struc, AnaField):
-            return field_struc.idfield if mode == 'id' else field_struc.index
-        return field_struc
+            return [Util.view(val, mode=mode, ana=ana) for val in field_struc]
+        if not isinstance(field_struc, AnaDfield):
+            return Util.view(ana.dfield(field_struc), mode=mode)
+        return field_struc if mode == 'field' else (
+                field_struc.index if mode=='index' else field_struc.idfield)
 
     @staticmethod
     def reduce_dic(obj, notempty=False):
