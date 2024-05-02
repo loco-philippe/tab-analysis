@@ -1020,9 +1020,15 @@ class AnaDataset:
         - **distributed** : boolean (default True) - Include only distributed fields
         '''
         partitions = self.partitions(distributed=distributed)
+        if not partitions:
+            #return {'primary': [], 'secondary': [], 'unique': [], 'variable': []}
+            return Util.view(
+                {'primary': [], 'secondary': [
+                    fld for fld in self.fields if fld.category != UNIQUE],
+                'mixte': [], 'unique': [
+                    fld for fld in self.fields if fld.category == UNIQUE],
+                'variable': []}, mode)
         if not partition:
-            if not partitions:
-                return {'primary': [], 'secondary': [], 'unique': [], 'variable': []}
             partition = partitions[0]
         else:
             partition = [self.dfield(fld) for fld in tuple(sorted(partition))]
@@ -1039,14 +1045,15 @@ class AnaDataset:
                           'mixte': mixte, 'unique': unique,
                           'variable': variable}, mode)
 
-    def relation_partition(self, partition=None, primary=False):
+    def relation_partition(self, partition=None, primary=False, noroot=False):
         '''return a dict with the list of relationships for fields in a partition.
 
         *Parameters*
 
         - **partition** : list (default None) - if None, partition is the first
         - **primary** : boolean (default False) - if True, relations are primary fields
-        '''
+        - **noroot** : boolean (default False) - if True and single primary, 
+        'root' field is replaced by the primary field'''
         partitions = self.partitions()
         if not partitions:
             partition = None
@@ -1081,6 +1088,10 @@ class AnaDataset:
                                     if self.dfield(fld.idfield) in part['primary']]
                     rel = [idf for idf in partition if not idf in rel]'''
                 case _: ...
+            if rel == ['root'] and len(part['primary']) == 1 and noroot:
+                rel = [part['primary'][0].idfield]
+            if rel == ['root'] and len(part['primary']) == 0 and noroot:
+     xxxx           rel = [part['primary'][0].idfield] # !!!!
             relations[field.idfield] = rel
         return relations
 
