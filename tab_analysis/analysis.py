@@ -1091,7 +1091,7 @@ class AnaDataset:
             if rel == ['root'] and len(part['primary']) == 1 and noroot:
                 rel = [part['primary'][0].idfield]
             if rel == ['root'] and len(part['primary']) == 0 and noroot:
-     xxxx           rel = [part['primary'][0].idfield] # !!!!
+                rel = [part['secondary'][0].idfield]
             relations[field.idfield] = rel
         return relations
 
