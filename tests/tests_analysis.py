@@ -122,8 +122,8 @@ class Test_AnaField_AnaRelation(unittest.TestCase):
           {'3 ': ['i3 (0 - 2)']}, {'4 ': ['i4 (0 - 2)']}]}]})
 
     def test_partitions(self):
-        self.assertEqual(dts.partitions('index', distributed=False), [[1, 3], [0]])
-        self.assertEqual(dts.partitions('id', distributed=False), [['i1', 'i3'], ['i0']])
+        self.assertEqual(dts.partitions(mode='index', distributed=False), [[1, 3], [0]])
+        self.assertEqual(dts.partitions(mode='id', distributed=False), [['i1', 'i3'], ['i0']])
         
 class Test_AnaDataset(unittest.TestCase):
 
@@ -144,66 +144,66 @@ class Test_AnaDataset(unittest.TestCase):
                      'location': 	["fr", "gb", "es", "ch", "gb", "fr", "es", "ch"],
                      'valid': ["ok", "ok", "ok", "ok", "ok", "ok", "ok", "ok"]}
         ilm = Sdataset.ntv(fruits) 
-        self.assertEqual(ilm.analysis.partitions('index'), [[0, 2, 5], [2, 5, 8], [0, 9], [2, 3], [8, 9], [7]])  
+        self.assertEqual(ilm.analysis.partitions(mode='index'), [[0, 2, 5], [2, 5, 8], [0, 9], [2, 3], [8, 9], [7]])  
         
         ana = AnaDataset(ilm.to_analysis())
-        self.assertEqual(ana.partitions('index', distributed=False), 
+        self.assertEqual(ana.partitions(mode='index', distributed=False), 
                          [[0, 2, 5], [0, 2, 8], [0, 5, 8], [2, 5, 8], [0, 9], [2, 3], [8, 9], [7]])
         ana = AnaDataset(ilm.to_analysis(True))
-        self.assertEqual(ana.partitions('index'), [[0, 2, 5], [2, 5, 8], [0, 9], [2, 3], [8, 9], [7]])
+        self.assertEqual(ana.partitions(mode='index'), [[0, 2, 5], [2, 5, 8], [0, 9], [2, 3], [8, 9], [7]])
         self.assertEqual(ana.field_partition(mode='index', distributed=False), 
-                         {'primary': [0, 2, 5], 'secondary': [1], 'unique': [10], 'variable': [3, 4, 6, 7, 8, 9]})
+                         {'mixte': [3], 'primary': [0, 2, 5], 'secondary': [1], 'unique': [10], 'variable': [4, 6, 7, 8, 9]})
         self.assertEqual(ana.field_partition(mode='index'), 
-                         {'primary': [0, 2, 5], 'secondary': [1], 'unique': [10], 'variable': [3, 4, 6, 7, 8, 9]})
+                         {'mixte': [3], 'primary': [0, 2, 5], 'secondary': [1], 'unique': [10], 'variable': [4, 6, 7, 8, 9]})
         self.assertEqual(ana.field_partition(mode='index', partition=ana.partitions()[1]), 
-                         {'primary': [2, 5, 8], 'secondary': [], 'unique': [10], 'variable': [0, 1, 3, 4, 6, 7, 9]})
-        self.assertEqual(ana.field_partition()['variable'], ana.variable)
-        self.assertEqual(ana.field_partition()['primary'], ana.primary)
-        self.assertEqual(ana.field_partition()['secondary'], ana.secondary)
-        self.assertEqual(ana.field_partition()['unique'], ana.unique)
+                         {'mixte': [], 'primary': [2, 5, 8], 'secondary': [], 'unique': [10], 'variable': [0, 1, 3, 4, 6, 7, 9]})
+        self.assertEqual(ana.field_partition(mode='field')['variable'], ana.variable)
+        self.assertEqual(ana.field_partition(mode='field')['primary'], ana.primary)
+        self.assertEqual(ana.field_partition(mode='field')['secondary'], ana.secondary)
+        self.assertEqual(ana.field_partition(mode='field')['unique'], ana.unique)
 
     def test_partitions(self):
         ilm = Sdataset.ntv({'i0': [1, 2, 3], 'test': [0, 1, 1]})
         self.assertEqual(ilm.partitions, [[0]])
         ilm = Sdataset.from_ntv({'i0': ['a', 'b', 'c'], 'i1': [1, 2, 2], 
                                  'i2': [4, 5, 5], 'i3': [6, 7, 8], 'i4': [6, 7, 8]})
-        self.assertEqual(ilm.analysis.field_partition('index'), 
-                         {'primary': [0], 'secondary': [1, 2, 3, 4], 'unique': [], 'variable': []})
+        self.assertEqual(ilm.analysis.field_partition(mode='index'), 
+                         {'mixte': [], 'primary': [0], 'secondary': [1, 2, 3, 4], 'unique': [], 'variable': []})
         ilm = Sdataset.ntv([['math', 'english', 'software', 'physic', 'english', 'software'],
                          ['philippe', 'philippe', 'philippe',
                           'anne', 'anne', 'anne'],
                          [None, None, None, 'gr1', 'gr1', 'gr2'],
                          ['philippe white', 'philippe white', 'philippe white',
                           'anne white', 'anne white', 'anne white']])
-        self.assertEqual(AnaDataset(ilm.to_analysis(True)).partitions('index'), [])
+        self.assertEqual(AnaDataset(ilm.to_analysis(True)).partitions(mode='index'), [])
         ilm = Cdataset.from_ntv([['math', 'english', 'software', 'math', 'english', 'software'],
                           ['philippe', 'philippe', 'philippe', 'anne', 'anne', 'anne'],
                           [None, None, None, 'gr1', 'gr1', 'gr2'],
                           ['philippe white', 'philippe white', 'philippe white',
                            'anne white', 'anne white', 'anne white']])
         ana = AnaDataset(ilm.to_analysis(True))
-        self.assertEqual(ana.partitions('index')[0], [0, 1])
+        self.assertEqual(ana.partitions(mode='index')[0], [0, 1])
         self.assertEqual(ana.dimension, 2)
         
         ilm = Cdataset.from_ntv([['er', 'rt', 'er', 'ry'], [0, 2, 0, 2], [30, 12, 12, 15],
                      [2, 0, 2, 0], [2, 2, 0, 0], ['info', 'info', 'info', 'info'], [12, 12, 15, 30]])
         ana = AnaDataset(ilm.to_analysis(True))
-        self.assertEqual(ana.partitions('index')[0], [1, 4])
+        self.assertEqual(ana.partitions(mode='index')[0], [1, 4])
         
         ilm = Cdataset.from_ntv([['er', 'rt', 'er', 'ry'], [0, 2, 0, 2], [30, 12, 20, 30],
                      [2, 0, 2, 0], [2, 2, 0, 0], ['info', 'info', 'info', 'info'], [12, 20, 20, 12]])
         ana = AnaDataset(ilm.to_analysis(True))
-        self.assertEqual(ana.partitions('index')[0], [1, 4])
+        self.assertEqual(ana.partitions(mode='index')[0], [1, 4])
         
         ilm = Cdataset.from_ntv([[0, 2, 0, 2], [30, 12, 12, 15], [2, 0, 2, 0], [2, 2, 0, 0],
                           ['info', 'info', 'info', 'info'], [12, 12, 15, 30]])
         ana = AnaDataset(ilm.to_analysis(True))
-        self.assertEqual(ana.partitions('index')[0], [0, 3])
+        self.assertEqual(ana.partitions(mode='index')[0], [0, 3])
         
         ilm = Cdataset.from_ntv([[0, 2, 0, 2], [30, 12, 20, 30], [2, 0, 2, 0], [2, 2, 0, 0],
                           ['info', 'info', 'info', 'info'], [12, 20, 20, 12]])
         ana = AnaDataset(ilm.to_analysis(True))
-        self.assertEqual(ana.partitions('index')[0], [0, 3])        
+        self.assertEqual(ana.partitions(mode='index')[0], [0, 3])        
 
     def test_tree(self):
         il = Sdataset.ntv([[1,2,3,4], [5,6,7,8], [0,0,1,1]])

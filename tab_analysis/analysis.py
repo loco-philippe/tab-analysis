@@ -721,6 +721,7 @@ class AnaDataset:
     - `primary`
     - `secondary`
     - `unique`
+    - `mixte`
     - `variable`
 
     *global (@property)*
@@ -844,8 +845,9 @@ class AnaDataset:
     @property
     def primary(self):
         '''return the first partition of the partitions'''
-        part = self.partitions(distributed=True)
-        return part[0] if part else []
+        return self.field_partition(mode='field')['primary']
+        #part = self.partitions(mode='field', distributed=True)
+        #return part[0] if part else []
 
     @property
     def complete(self):
@@ -860,10 +862,7 @@ class AnaDataset:
     @property
     def secondary(self):
         '''return the derived ou coupled fields from primary'''
-        secondary = []
-        for field in self.primary:
-            self._add_child(field, secondary)
-        return [fld for fld in secondary if not fld in self.primary]
+        return self.field_partition(mode='field')['secondary']
 
     @property
     def unique(self):
@@ -873,8 +872,12 @@ class AnaDataset:
     @property
     def variable(self):
         '''return the variable fields'''
-        return [fld for fld in self.fields
-                if not fld in self.primary + self.secondary + self.unique]
+        return self.field_partition(mode='field')['variable']
+
+    @property
+    def mixte(self):
+        '''return the variable fields'''
+        return self.field_partition(mode='field')['mixte']
 
     def set_relations(self, field, dic_relations):
         '''Add relations in the AnaDataset from a dict.
@@ -974,12 +977,12 @@ class AnaDataset:
                 [self.get_relation(i, j).to_dict(full=True, mode=mode)
                  for i in range(-1, leng) for j in range(i + 1, leng)]}
 
-    def partitions(self, mode='field', distributed=True):
+    def partitions(self, mode='id', distributed=True):
         '''return a list of available partitions (the first is highest).
 
          *Parameters*
 
-        - **mode** : str (default 'field') - AnaDfield representation
+        - **mode** : str (default 'id') - AnaDfield representation
         ('field', 'id', 'index')
         - **distributed** : boolean (default True) - Include only distributed fields
         '''
@@ -1007,19 +1010,19 @@ class AnaDataset:
                 sorted(sorted(list({tuple(sorted(prt)) for prt in partit})),
                        key=len, reverse=True)]
 
-    def field_partition(self, mode='field', partition=None, distributed=True):
+    def field_partition(self, mode='id', partition=None, distributed=True):
         '''return a partition dict with the list of primary, secondary, unique
         and variable fields.
 
         *Parameters*
 
-        - **mode** : str (default 'field') - AnaDfield representation
+        - **mode** : str (default 'id') - AnaDfield representation
         ('field', 'id', 'index')
         - **partition** : list of str, int, AnaDfield or AnaField(default None) - 
         if None, partition is the first
         - **distributed** : boolean (default True) - Include only distributed fields
         '''
-        partitions = self.partitions(distributed=distributed)
+        partitions = self.partitions(mode='field', distributed=distributed)
         if not partitions:
             #return {'primary': [], 'secondary': [], 'unique': [], 'variable': []}
             return Util.view(
@@ -1038,7 +1041,6 @@ class AnaDataset:
         secondary = [fld for fld in secondary if not fld in partition]
         unique = [fld for fld in self.fields if fld.category == UNIQUE]
         mixte = list(self._mixte_dims(partition, partitions))
-        #mixte = [fld for fld in part_fld if not fld in partition + secondary]
         variable = [fld for fld in self.fields
                     if not fld in partition + secondary + unique + mixte]
         return Util.view({'primary': partition, 'secondary': secondary,
@@ -1054,12 +1056,12 @@ class AnaDataset:
         - **primary** : boolean (default False) - if True, relations are primary fields
         - **noroot** : boolean (default False) - if True and single primary, 
         'root' field is replaced by the primary field'''
-        partitions = self.partitions()
+        partitions = self.partitions(mode='field')
         if not partitions:
             partition = None
         else:
             partition = Util.view(partition, mode='field', ana=self) if partition else partitions[0]
-        part = self.field_partition(partition=partition, distributed=True)
+        part = self.field_partition(mode='field', partition=partition, distributed=True)
         fields_cat = {fld: cat for cat, l_fld in part.items() for fld in l_fld}
         relations = {}
         for field in fields_cat:
@@ -1082,7 +1084,7 @@ class AnaDataset:
                     '''self._add_child(field, rel)
                     rel = [fld.idfield for fld in rel if fld in part['primary']]
                     '''
-                    '''for prt in self.partitions():
+                    '''for prt in self.partitions(mode='field'):
                         if field in prt:
                             rel += [fld.idfield for fld in prt
                                     if self.dfield(fld.idfield) in part['primary']]
@@ -1143,7 +1145,6 @@ class AnaDataset:
                 if min(self.get_relation(not_part[0], fld).typecoupl == 'derived'
                            for fld in sub_part) == True:               
                     dic_mixte[not_part[0]] = sub_part  
-                    #dic_mixte[not_part[0].idfield] = [fld.idfield for fld in sub_part]  
         return dic_mixte
     
     
@@ -1168,7 +1169,7 @@ class Util:
                     for key, val in field_struc.items()}
         if isinstance(field_struc, list):
             return [Util.view(val, mode=mode, ana=ana) for val in field_struc]
-        if not isinstance(field_struc, AnaDfield):
+        if not isinstance(field_struc, AnaDfield) and mode != 'id':
             return Util.view(ana.dfield(field_struc), mode=mode)
         return field_struc if mode == 'field' else (
                 field_struc.index if mode=='index' else field_struc.idfield)
