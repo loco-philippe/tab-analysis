@@ -1,4 +1,4 @@
-### *TAB-analysis : A tool to Analyse tabular and multi-dimensionnal structures*
+### *TAB-analysis : A tool to Analyse tabular and multi-dimensional structures*
 
 *TAB-analysis analyzes and measures the relationships between Fields in any tabular Dataset.*
 
@@ -15,7 +15,7 @@ The relationships between two fields can also be characterized in a similar way 
 
 Analyzing these properties gives us a measure of the entire dataset.
 
-The TAB-analysis module carries out these measurements and analyzes. It also identifies data that does not respect given relationships.
+The TAB-analysis module carries out these measurements and analyzes. It also identifies data that does not respect given relationships and multidimensional structure.* .
 
 ## Examples
 
@@ -51,7 +51,7 @@ In [1]: # creation of the `analysis` object
         # `analysis` is also available from pandas data
         import pandas as pd
         import ntv_pandas as npd
-        analysis = pd.DataFrame(tabular).npd.analysis()
+        analysis = pd.DataFrame(tabular).npd.analysis(distr=True)
 
 In [2]: # each relationship is evaluated and measured 
         analysis.get_relation('plants', 'product').typecoupl
@@ -73,13 +73,14 @@ Out[5]: -1: root-derived (8)
            3 : price (0 - 8)
 
 In [6]: # 'partitions' are found (partitions are multi-dimensionnal data)'
-        analysis.partitions(mode='id')
-Out[6]: [['product', 'quantity'], ['price']]
+        analysis.partitions()
+Out[6]: [['quantity', 'product'], ['price']]
 
 In [7]: # the `field_partition` method return the main structure of the dataset
-        analysis.field_partition(mode='id')
+        analysis.field_partition()
 Out[7]: {'primary': ['quantity', 'product'],
          'secondary': ['plants'],
+         'mixte': [],
          'unique': [],
          'variable': ['price']}
 ```
@@ -98,4 +99,5 @@ and in connection with the tabular application:
 
 - error detection and correction,
 - generation of optimized data formats
+- conversion to multidimensional data
 - interface to specific applications
