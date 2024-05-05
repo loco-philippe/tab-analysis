@@ -1,11 +1,12 @@
 Version x.y.z
 =============
 
-0.2.0 RC2 (2024-04-27)
+0.2.0 RC2 (2024-05-05)
 -----------------------
 - extension to multidimensional data 
     - return shape of variable
-    - identification of mixte variables (coordinates)
+    - identification of mixte variables / coordinates
+    - add relation_partition method
 - issues ENH : #4, #5
 
 0.1.1 RC1 (2024-01-04)
