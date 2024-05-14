@@ -8,3 +8,8 @@ matplotlib
 folium
 
 pdoc
+
+ntv-pandas
+tab-dataset
+json-ntv
+ntv-numpy
