@@ -19,7 +19,7 @@ jobs:
         python-version: ["3.9", "3.10", "3.11"]
         env: [""]
         include:
-          # Minimum python version:
+          # Minimum python version: 
           - env: "env-analysis"
     steps:
     - uses: actions/checkout@v4
