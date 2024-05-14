@@ -8,6 +8,7 @@ matplotlib
 folium
 
 pdoc
+tabulate
 
 ntv-pandas
 tab-dataset

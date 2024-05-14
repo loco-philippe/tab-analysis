@@ -7,7 +7,7 @@ Created on Mon Apr 15 10:59:39 2024
 import xarray as xr
 import numpy as np
 import ntv_pandas as npd
-from analysis import Util
+from tab_analysis import Util
 
 ds = xr.Dataset(
     {"foo": (("x", "y", "year"), np.random.randn(2, 3, 2))},
