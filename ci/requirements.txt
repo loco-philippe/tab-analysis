@@ -1,0 +1,10 @@
+scipp
+pandas
+xarray
+astropy
+
+shapely
+matplotlib
+folium
+
+pdoc
