@@ -668,33 +668,36 @@ class AnaDfield(AnaField):
         the childs "name ( dist - lencodec)".
         '''
         adding = ''
-        if mode == 'distance':
-            rel_parent = self.dataset.get_relation(self, self.p_distance)
-            adding = str(rel_parent.distance) + ' - '
-        elif mode == 'distomin':
-            rel_parent = self.dataset.get_relation(self, self.p_distomin)
-            adding = str(rel_parent.distomin) + ' - '
-        elif mode == 'derived':
-            rel_parent = self.dataset.get_relation(self, self.p_derived)
-            adding = str(rel_parent.distance) + ' - '
+        match mode:
+            case 'distance': #  if mode == 'distance':
+                rel_parent = self.dataset.get_relation(self, self.p_distance)
+                adding = str(rel_parent.distance) + ' - '
+            case 'distomin': # elif mode == 'distomin':
+                rel_parent = self.dataset.get_relation(self, self.p_distomin)
+                adding = str(rel_parent.distomin) + ' - '
+            case 'derived': # elif mode == 'derived':
+                rel_parent = self.dataset.get_relation(self, self.p_derived)
+                adding = str(rel_parent.distance) + ' - '
+            case _:...
         adding += str(self.lencodec)
         name = str(self.idfield)[:lname] + ' (' + adding + ')'
         lis = [name.replace(' ', '*').replace("'", '*')]
-        if mode == 'derived':
-            childs = []
-            if self.category not in (ROOTED, COUPLED, UNIQUE):
-                for rel in self.list_coupled:
-                    lis.append(rel.relation[1].dic_inner_node(mode, lname))
-            if self.category not in (ROOTED, UNIQUE):
+        match mode:
+            case 'derived': # if mode == 'derived':
+                childs = []
+                if self.category not in (ROOTED, COUPLED, UNIQUE):
+                    for rel in self.list_coupled:
+                        lis.append(rel.relation[1].dic_inner_node(mode, lname))
+                if self.category not in (ROOTED, UNIQUE):
+                    childs = [rel.relation[1] for rel in self.list_relations
+                              if rel.relation[1].p_derived == self and
+                              rel.relation[1].category != COUPLED]
+            case 'distomin': # if mode == 'distomin':
                 childs = [rel.relation[1] for rel in self.list_relations
-                          if rel.relation[1].p_derived == self and
-                          rel.relation[1].category != COUPLED]
-        if mode == 'distomin':
-            childs = [rel.relation[1] for rel in self.list_relations
-                      if rel.relation[1].p_distomin == self]
-        if mode == 'distance':
-            childs = [rel.relation[1] for rel in self.list_relations
-                      if rel.relation[1].p_distance == self]
+                          if rel.relation[1].p_distomin == self]
+            case 'distance': # if mode == 'distance':
+                childs = [rel.relation[1] for rel in self.list_relations
+                          if rel.relation[1].p_distance == self]
         for fld in childs:
             lis.append(fld.dic_inner_node(mode, lname))
         return {str(self.index).ljust(2, '*'): lis}

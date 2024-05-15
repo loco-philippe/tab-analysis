@@ -15,14 +15,14 @@ ds = xr.Dataset(
         "x": [10, 20],
         "y": ["a", "b", "c"],
         "year": [2020, 2021],
-        "point": (("x", "y"), np.array(["pt1", "pt2", "pt3", "pt4", "pt5", "pt6"]).reshape(2,3)),
+        "point": (("x", "y"), np.array(["pt1", "pt2", "pt3", "pt4", "pt5", "pt6"]).reshape(2, 3)),
         "along_x": ("x", np.random.randn(2)),
         "scalar": 123
     })
 df = ds.to_dataframe().reset_index()
 ana = df.npd.analysis(distr=True)
-print(Util.reduce_dic(ana.field_partition(mode='id')))
-print(ana.partitions(mode='id'))
+#print(Util.reduce_dic(ana.field_partition(mode='id')))
+#print(ana.partitions(mode='id'))
 
 ds = xr.Dataset(
     {"foo": (("x", "y", "year"), np.random.randn(2, 3, 2))},
@@ -30,11 +30,11 @@ ds = xr.Dataset(
         "x": [10, 20],
         "y": ["a", "a", "c"],
         "year": [2020, 2021],
-        "point": (("x", "y"), np.array(["pt1", "pt2", "pt3", "pt4", "pt5", "pt6"]).reshape(2,3)),
+        "point": (("x", "y"), np.array(["pt1", "pt2", "pt3", "pt4", "pt5", "pt6"]).reshape(2, 3)),
         "along_x": ("x", np.random.randn(2)),
         "scalar": 123
     })
 df = ds.to_dataframe().reset_index()
 ana = df.npd.analysis(distr=True)
-print(Util.reduce_dic(ana.field_partition(mode='id'), notempty=True))
-print(ana.partitions(mode='id'))
+#print(Util.reduce_dic(ana.field_partition(mode='id'), notempty=True))
+#print(ana.partitions(mode='id'))

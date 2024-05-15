@@ -57,8 +57,8 @@ class TestCdataset(unittest.TestCase):
                     default=True),  # derived from 1
              Cfield([200, 200, 300, 200, 300, 300], 'i3',
                     default=True),  # derived from root
-             Cfield([201, 201, 301, 201, 301, 301], 'i4', default=True)],  # coupled to i3
-                    'test')
+             Cfield([201, 201, 301, 201, 301, 301], 'i4', default=True)],
+                    'test')   # coupled to i3
         self.assertEqual(cdts.to_analysis()['relations'], dic['relations'])
         self.assertEqual(cdts.to_analysis()['name'], dic['name'])
         self.assertEqual(cdts.to_analysis()['length'], dic['length'])
@@ -242,7 +242,8 @@ class TestAnaDataset(unittest.TestCase):
     def test_tree(self):
         '''tests AnaDataset'''
         il = Sdataset.ntv([[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 1]])
-        self.assertEqual(AnaDataset(il.to_analysis(True)).tree(),
+        self.assertEqual(
+            AnaDataset(il.to_analysis(True)).tree(),
             '-1: root-derived (4)\n   0 : i0 (0 - 4)\n   1 : i1 (0 - 4)\n   2 : i2 (2 - 2)')
 
 
