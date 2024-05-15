@@ -58,7 +58,7 @@ class TestCdataset(unittest.TestCase):
              Cfield([200, 200, 300, 200, 300, 300], 'i3',
                     default=True),  # derived from root
              Cfield([201, 201, 301, 201, 301, 301], 'i4', default=True)],
-                    'test')   # coupled to i3
+            'test')   # coupled to i3
         self.assertEqual(cdts.to_analysis()['relations'], dic['relations'])
         self.assertEqual(cdts.to_analysis()['name'], dic['name'])
         self.assertEqual(cdts.to_analysis()['length'], dic['length'])

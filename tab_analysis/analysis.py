@@ -678,7 +678,7 @@ class AnaDfield(AnaField):
             case 'derived':
                 rel_parent = self.dataset.get_relation(self, self.p_derived)
                 adding = str(rel_parent.distance) + ' - '
-            case _:...
+            case _: ...
         adding += str(self.lencodec)
         name = str(self.idfield)[:lname] + ' (' + adding + ')'
         lis = [name.replace(' ', '*').replace("'", '*')]
