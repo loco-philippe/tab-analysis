@@ -26,7 +26,6 @@ setup(
         "Programming Language :: Python :: 3"],
     keywords="tabular data, multidimensional data, open data, environmental data",
     packages=find_packages(include=['tab_analysis', 'tab_analysis.*']),
-    #package_data={'tab_analysis': ['*.ini']},
     python_requires=">=3.9, <4",
     install_requires=[]
 )

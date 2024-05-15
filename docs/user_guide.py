@@ -6,5 +6,5 @@ Created on Fri Sep 30 10:09:01 2022
 .. include:: ../README.md
 .. include:: ../tab_analysis/README.md
 .. include:: ../example/README.md
-.. include:: ./README.md    
+.. include:: ./README.md
 """

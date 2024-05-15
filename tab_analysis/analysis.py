@@ -207,7 +207,7 @@ class AnaField:
     @property
     def iscomplete(self):
         '''return boolean indicator : True if all attributes are present'''
-        return not self.maxcodec is None and not self.mincodec is None
+        return self.maxcodec is not None and not self.mincodec is None
 
     @property
     def ratecodec(self):
@@ -682,10 +682,10 @@ class AnaDfield(AnaField):
         lis = [name.replace(' ', '*').replace("'", '*')]
         if mode == 'derived':
             childs = []
-            if not self.category in (ROOTED, COUPLED, UNIQUE):
+            if self.category not in (ROOTED, COUPLED, UNIQUE):
                 for rel in self.list_coupled:
                     lis.append(rel.relation[1].dic_inner_node(mode, lname))
-            if not self.category in (ROOTED, UNIQUE):
+            if self.category not in (ROOTED, UNIQUE):
                 childs = [rel.relation[1] for rel in self.list_relations
                           if rel.relation[1].p_derived == self and
                           rel.relation[1].category != COUPLED]
@@ -1038,11 +1038,11 @@ class AnaDataset:
         secondary = []
         for field in partition:
             self._add_child(field, secondary)
-        secondary = [fld for fld in secondary if not fld in partition]
+        secondary = [fld for fld in secondary if fld not in partition]
         unique = [fld for fld in self.fields if fld.category == UNIQUE]
         mixte = list(self._mixte_dims(partition, partitions))
         variable = [fld for fld in self.fields
-                    if not fld in partition + secondary + unique + mixte]
+                    if fld not in partition + secondary + unique + mixte]
         return Util.view({'primary': partition, 'secondary': secondary,
                           'mixte': mixte, 'unique': unique,
                           'variable': variable}, mode)
@@ -1123,18 +1123,18 @@ class AnaDataset:
         ''' add derived or coupled fields in the childs list'''
         for rel in field.list_c_derived + field.list_coupled:
             child = rel.relation[1]
-            if not child in childs and not child.category == UNIQUE:
+            if child not in childs and not child.category == UNIQUE:
                 childs.append(child)
-                if not child.category in (COUPLED, UNIQUE):
+                if child.category not in (COUPLED, UNIQUE):
                     self._add_child(child, childs)
 
     def _mixte_dims(self, partition, partitions):
         '''return dict with dimensions associated to each mixte field'''
         dic_mixte = {}
         for part in partitions:
-            not_part = [fld for fld in part if not fld in partition]
+            not_part = [fld for fld in part if fld not in partition]
             if len(not_part) == 1 and len(partition) > len(part) > 1:
-                sub_part = [fld for fld in partition if not fld in part]
+                sub_part = [fld for fld in partition if fld not in part]
                 if min(self.get_relation(not_part[0], fld).typecoupl == 'derived'
                        for fld in sub_part) is True:
                     dic_mixte[not_part[0]] = sub_part
@@ -1172,7 +1172,7 @@ class Util:
         '''return a dict without None values'''
         if isinstance(obj, dict):
             return {key: Util.reduce_dic(val) for key, val in obj.items()
-                    if not val is None and (not notempty or val)}
+                    if val is not None and (not notempty or val)}
         if isinstance(obj, list):
             return [Util.reduce_dic(val) for val in obj]
         return obj
