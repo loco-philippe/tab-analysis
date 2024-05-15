@@ -669,13 +669,13 @@ class AnaDfield(AnaField):
         '''
         adding = ''
         match mode:
-            case 'distance': #  if mode == 'distance':
+            case 'distance':
                 rel_parent = self.dataset.get_relation(self, self.p_distance)
                 adding = str(rel_parent.distance) + ' - '
-            case 'distomin': # elif mode == 'distomin':
+            case 'distomin':
                 rel_parent = self.dataset.get_relation(self, self.p_distomin)
                 adding = str(rel_parent.distomin) + ' - '
-            case 'derived': # elif mode == 'derived':
+            case 'derived':
                 rel_parent = self.dataset.get_relation(self, self.p_derived)
                 adding = str(rel_parent.distance) + ' - '
             case _:...
@@ -683,7 +683,7 @@ class AnaDfield(AnaField):
         name = str(self.idfield)[:lname] + ' (' + adding + ')'
         lis = [name.replace(' ', '*').replace("'", '*')]
         match mode:
-            case 'derived': # if mode == 'derived':
+            case 'derived':
                 childs = []
                 if self.category not in (ROOTED, COUPLED, UNIQUE):
                     for rel in self.list_coupled:
@@ -692,10 +692,10 @@ class AnaDfield(AnaField):
                     childs = [rel.relation[1] for rel in self.list_relations
                               if rel.relation[1].p_derived == self and
                               rel.relation[1].category != COUPLED]
-            case 'distomin': # if mode == 'distomin':
+            case 'distomin':
                 childs = [rel.relation[1] for rel in self.list_relations
                           if rel.relation[1].p_distomin == self]
-            case 'distance': # if mode == 'distance':
+            case 'distance':
                 childs = [rel.relation[1] for rel in self.list_relations
                           if rel.relation[1].p_distance == self]
         for fld in childs:
