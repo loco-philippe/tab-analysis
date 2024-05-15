@@ -55,10 +55,10 @@ class TestCdataset(unittest.TestCase):
                     'i1', default=True),  # mixed
              Cfield([20, 10, 10, 10, 10, 20], 'i2',
                     default=True),  # derived from 1
-             Cfield([200, 200, 300, 200, 300, 300],  'i3',
+             Cfield([200, 200, 300, 200, 300, 300], 'i3',
                     default=True),  # derived from root
-             Cfield([201, 201, 301, 201, 301, 301],  'i4', default=True)]  # coupled to i3
-            , 'test')
+             Cfield([201, 201, 301, 201, 301, 301], 'i4', default=True)],  # coupled to i3
+                    'test')
         self.assertEqual(cdts.to_analysis()['relations'], dic['relations'])
         self.assertEqual(cdts.to_analysis()['name'], dic['name'])
         self.assertEqual(cdts.to_analysis()['length'], dic['length'])
@@ -120,13 +120,13 @@ class TestAnaFieldAnaRelation(unittest.TestCase):
         '''tests AnaField, AnaRelation'''
         self.assertEqual(dts.tree(string=False),
                          {'-1': ['root-derived (6)',
-                                {'0 ': ['i0 (0 - 6)']},
-                                {'1 ': ['i1 (3 - 3)', {'2 ': ['i2 (1 - 2)']}]},
-                                {'3 ': ['i3 (4 - 2)', {'4 ': ['i4 (0 - 2)']}]}]})
+                                 {'0 ': ['i0 (0 - 6)']},
+                                 {'1 ': ['i1 (3 - 3)', {'2 ': ['i2 (1 - 2)']}]},
+                                 {'3 ': ['i3 (4 - 2)', {'4 ': ['i4 (0 - 2)']}]}]})
         self.assertEqual(dts.tree('distance', string=False),
                          {'-1': ['root-distance (6)',
-                         {'0 ': ['i0 (0 - 6)']},
-                         {'1 ': ['i1 (3 - 3)', {'2 ': [
+                          {'0 ': ['i0 (0 - 6)']},
+                           {'1 ': ['i1 (3 - 3)', {'2 ': [
                              'i2 (1 - 2)', {'3 ': ['i3 (2 - 2)', {'4 ': [
                                  'i4 (0 - 2)']}]}]}]}]})
         self.assertEqual(dts.tree('distomin', string=False),

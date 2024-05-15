@@ -17,7 +17,7 @@ ds = xr.Dataset(
         "year": [2020, 2021],
         "point": (("x", "y"), np.array(["pt1", "pt2", "pt3", "pt4", "pt5", "pt6"]).reshape(2,3)),
         "along_x": ("x", np.random.randn(2)),
-        "scalar": 123,
+        "scalar": 123
     })
 df = ds.to_dataframe().reset_index()
 ana = df.npd.analysis(distr=True)
@@ -32,7 +32,7 @@ ds = xr.Dataset(
         "year": [2020, 2021],
         "point": (("x", "y"), np.array(["pt1", "pt2", "pt3", "pt4", "pt5", "pt6"]).reshape(2,3)),
         "along_x": ("x", np.random.randn(2)),
-        "scalar": 123,
+        "scalar": 123
     })
 df = ds.to_dataframe().reset_index()
 ana = df.npd.analysis(distr=True)

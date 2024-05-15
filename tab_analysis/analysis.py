@@ -207,7 +207,7 @@ class AnaField:
     @property
     def iscomplete(self):
         '''return boolean indicator : True if all attributes are present'''
-        return self.maxcodec is not None and not self.mincodec is None
+        return self.maxcodec is not None and self.mincodec is not None
 
     @property
     def ratecodec(self):
