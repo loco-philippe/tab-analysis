@@ -5,4 +5,4 @@ Created on Fri Sep 19 2023
 @author: philippe@loco-labs.io
 """
 
-name = 'tab_analysis'
+name = "tab_analysis"

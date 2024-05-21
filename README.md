@@ -40,12 +40,12 @@ In this example, we observe two kinds of relationships:
 This Dataset can be translated in a matrix between 'quantity' ['1 kg', '10 kg'] and 'product' ['apple', 'orange', 'peppers', 'carrot']
 
 ```python
-In [1]: # creation of the `analysis` object 
+In [1]: # creation of the `analysis` object
         from tab_dataset import Sdataset
         from tab_analysis import AnaDataset
         tabular = {'plants':   ['fruit', 'fruit','fruit',   'fruit','vegetable','vegetable','vegetable','vegetable' ],
-                   'quantity': ['1 kg' , '10 kg', '1 kg',   '10 kg',  '1 kg',    '10 kg',   '1 kg',     '10 kg'     ], 
-                   'product':  ['apple', 'apple', 'orange', 'orange', 'peppers', 'peppers', 'carrot',   'carrot'    ], 
+                   'quantity': ['1 kg' , '10 kg', '1 kg',   '10 kg',  '1 kg',    '10 kg',   '1 kg',     '10 kg'     ],
+                   'product':  ['apple', 'apple', 'orange', 'orange', 'peppers', 'peppers', 'carrot',   'carrot'    ],
                    'price':    [1,       10,      2,        20,       1.5,       15,        0.5,        5           ]}
         analysis = AnaDataset(Sdataset.ntv(tabular).to_analysis(True))
         # `analysis` is also available from pandas data
@@ -53,7 +53,7 @@ In [1]: # creation of the `analysis` object
         import ntv_pandas as npd
         analysis = pd.DataFrame(tabular).npd.analysis(distr=True)
 
-In [2]: # each relationship is evaluated and measured 
+In [2]: # each relationship is evaluated and measured
         analysis.get_relation('plants', 'product').typecoupl
 Out[2]: 'derived'
 

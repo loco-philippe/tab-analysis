@@ -23,9 +23,10 @@ setup(
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Build Tools",
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3"],
+        "Programming Language :: Python :: 3",
+    ],
     keywords="tabular data, multidimensional data, open data, environmental data",
-    packages=find_packages(include=['tab_analysis', 'tab_analysis.*']),
+    packages=find_packages(include=["tab_analysis", "tab_analysis.*"]),
     python_requires=">=3.9, <4",
-    install_requires=[]
+    install_requires=[],
 )

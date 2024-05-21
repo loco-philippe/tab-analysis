@@ -3,7 +3,7 @@ Version x.y.z
 
 0.2.0 RC2 (2024-05-05)
 -----------------------
-- extension to multidimensional data 
+- extension to multidimensional data
     - return shape of variable
     - identification of mixte variables / coordinates
     - add relation_partition method
@@ -20,4 +20,4 @@ Version x.y.z
 - First release candidate
 - indicators for fields and datasets
 - partitions identification
-- dataset tree representation 
+- dataset tree representation

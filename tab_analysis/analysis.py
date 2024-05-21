@@ -9,74 +9,75 @@ This module analyses structure and relationships included in a tabular object
 
 It contains two another classes `Util`, `AnaError`.
 """
+
 import json
 import pprint
 from itertools import combinations
 from operator import mul
 from functools import reduce
 
-NULL = 'null'
-UNIQUE = 'unique'
-COMPLETE = 'complete'
-FULL = 'full'
-DEFAULT = 'default'
-MIXED = 'mixed'
+NULL = "null"
+UNIQUE = "unique"
+COMPLETE = "complete"
+FULL = "full"
+DEFAULT = "default"
+MIXED = "mixed"
 
-COUPLED = 'coupled'
-DERIVED = 'derived'
-LINKED = 'linked'
-CROSSED = 'crossed'
-DISTRIBUTED = 'distributed'
-ROOTED = 'rooted'
-ROOT = 'root'
+COUPLED = "coupled"
+DERIVED = "derived"
+LINKED = "linked"
+CROSSED = "crossed"
+DISTRIBUTED = "distributed"
+ROOTED = "rooted"
+ROOT = "root"
 
-IDFIELD = 'id'
-MINCODEC = 'mincodec'
-MAXCODEC = 'maxcodec'
-LENCODEC = 'lencodec'
-RATECODEC = 'ratecodec'
-DMINCODEC = 'dmincodec'
-DMAXCODEC = 'dmaxcodec'
-RANCODEC = 'rancodec'
-TYPECODEC = 'typecodec'
-HASHF = 'hashf'
-RELATION = 'relation'
-HASHR = 'hashr'
-DIST = 'dist'
-DMAX = 'dmax'
-DMIN = 'dmin'
-DIFF = 'diff'
-DRAN = 'dran'
-NUM = 'num'
-CATEGORY = 'category'
-PDERIVED = 'pderived'
-PDISTANCE = 'pdistance'
-PDISTOMIN = 'pdistomin'
-DISDISTANCE = 'disdistance'
-DERDISTANCE = 'derdistance'
-DISRATECPL = 'disratecpl'
-DERRATECPL = 'derratecpl'
-DISRATEDER = 'disrateder'
-DERRATEDER = 'derrateder'
+IDFIELD = "id"
+MINCODEC = "mincodec"
+MAXCODEC = "maxcodec"
+LENCODEC = "lencodec"
+RATECODEC = "ratecodec"
+DMINCODEC = "dmincodec"
+DMAXCODEC = "dmaxcodec"
+RANCODEC = "rancodec"
+TYPECODEC = "typecodec"
+HASHF = "hashf"
+RELATION = "relation"
+HASHR = "hashr"
+DIST = "dist"
+DMAX = "dmax"
+DMIN = "dmin"
+DIFF = "diff"
+DRAN = "dran"
+NUM = "num"
+CATEGORY = "category"
+PDERIVED = "pderived"
+PDISTANCE = "pdistance"
+PDISTOMIN = "pdistomin"
+DISDISTANCE = "disdistance"
+DERDISTANCE = "derdistance"
+DISRATECPL = "disratecpl"
+DERRATECPL = "derratecpl"
+DISRATEDER = "disrateder"
+DERRATEDER = "derrateder"
 
-TYPECOUPL = 'typecoupl'
-PARENTCHILD = 'parentchild'
-DISTANCE = 'distance'
-DISTOMIN = 'distomin'
-DISTOMAX = 'distomax'
-DISTROOT = 'distroot'
-RATECPL = 'ratecpl'
-RATEDER = 'rateder'
+TYPECOUPL = "typecoupl"
+PARENTCHILD = "parentchild"
+DISTANCE = "distance"
+DISTOMIN = "distomin"
+DISTOMAX = "distomax"
+DISTROOT = "distroot"
+RATECPL = "ratecpl"
+RATEDER = "rateder"
 
-IDDATASET = 'name'
-RELATIONS = 'relations'
-FIELDS = 'fields'
-LENGTH = 'length'
-HASHD = 'hashd'
+IDDATASET = "name"
+RELATIONS = "relations"
+FIELDS = "fields"
+LENGTH = "length"
+HASHD = "hashd"
 
 
 class AnaField:
-    '''This class analyses field entities.
+    """This class analyses field entities.
 
     *Attributes*
 
@@ -99,10 +100,12 @@ class AnaField:
 
     - `to_dict`
 
-    '''
+    """
 
-    def __init__(self, idfield, lencodec=None, mincodec=None, maxcodec=None, hashf=None):
-        '''Creation mode :
+    def __init__(
+        self, idfield, lencodec=None, mincodec=None, maxcodec=None, hashf=None
+    ):
+        """Creation mode :
         - single dict attribute where keys are attributes name,
         - single AnaField attribute to make a copy
         - multiple attributes
@@ -128,7 +131,7 @@ class AnaField:
         {'lencodec': 4, 'mincodec': 3, 'maxcodec': 4}
         >>> AnaField(4, 3, 4).to_dict()
         {'lencodec': 4, 'mincodec': 3, 'maxcodec': 4}
-        '''
+        """
         if isinstance(idfield, dict):
             self.idfield = idfield.get(IDFIELD, None)
             self.lencodec = idfield.get(LENCODEC, None)
@@ -152,90 +155,106 @@ class AnaField:
         self.hashf = hashf
 
     def __len__(self):
-        '''length of the field (maxcodec)'''
+        """length of the field (maxcodec)"""
         return self.maxcodec if self.maxcodec else self.lencodec
 
     def __repr__(self):
-        '''representation of the field (class name + idfield)'''
-        return self.__class__.__name__ + '(' + str(self.idfield) + ')'
+        """representation of the field (class name + idfield)"""
+        return self.__class__.__name__ + "(" + str(self.idfield) + ")"
 
     def __eq__(self, other):
-        ''' equal if class and attributes are equal'''
-        return self.__class__ .__name__ == other.__class__.__name__ and \
-            self.idfield == other.idfield and self.lencodec == other.lencodec and \
-            self.mincodec == other.mincodec and self.maxcodec == other.maxcodec and \
-            self.hashf == other.hashf
+        """equal if class and attributes are equal"""
+        return (
+            self.__class__.__name__ == other.__class__.__name__
+            and self.idfield == other.idfield
+            and self.lencodec == other.lencodec
+            and self.mincodec == other.mincodec
+            and self.maxcodec == other.maxcodec
+            and self.hashf == other.hashf
+        )
 
     def __lt__(self, other):
-        ''' return a comparison between hash value'''
+        """return a comparison between hash value"""
         return hash(self) < hash(other)
 
     def __hash__(self):
-        '''return hash value (sum of attributes hash)'''
-        return hash(self.idfield) + hash(self.lencodec) + hash(self.mincodec) \
-            + hash(self.maxcodec) + hash(self.hashf)
+        """return hash value (sum of attributes hash)"""
+        return (
+            hash(self.idfield)
+            + hash(self.lencodec)
+            + hash(self.mincodec)
+            + hash(self.maxcodec)
+            + hash(self.hashf)
+        )
 
     def __str__(self):
-        '''json-text build with the attributes dict'''
+        """json-text build with the attributes dict"""
         return json.dumps(self.to_dict(idfield=True))
 
     def __copy__(self):
-        ''' Copy all the attributes '''
+        """Copy all the attributes"""
         return self.__class__(self)
 
     def to_dict(self, full=False, idfield=False, notnone=True):
-        '''return a dict with field attributes.
+        """return a dict with field attributes.
 
          *Parameters*
 
         - **full** : boolean (default False) - if True, all the attributes are included
         - **idfield** : boolean (default False) - if True, idfield is included
         - **notnone** : boolean (default True) - if True, None values are not included
-        '''
-        dic = {LENCODEC: self.lencodec, MINCODEC: self.mincodec,
-               MAXCODEC: self.maxcodec}
+        """
+        dic = {
+            LENCODEC: self.lencodec,
+            MINCODEC: self.mincodec,
+            MAXCODEC: self.maxcodec,
+        }
         if idfield or full:
             dic[IDFIELD] = self.idfield
         if full:
-            dic |= {RATECODEC: self.ratecodec, DMINCODEC: self.dmincodec,
-                    DMAXCODEC: self.dmaxcodec, RANCODEC: self.rancodec,
-                    TYPECODEC: self.typecodec}
+            dic |= {
+                RATECODEC: self.ratecodec,
+                DMINCODEC: self.dmincodec,
+                DMAXCODEC: self.dmaxcodec,
+                RANCODEC: self.rancodec,
+                TYPECODEC: self.typecodec,
+            }
         if notnone:
             return Util.reduce_dic(dic)
         return dic
 
     @property
     def iscomplete(self):
-        '''return boolean indicator : True if all attributes are present'''
+        """return boolean indicator : True if all attributes are present"""
         return self.maxcodec is not None and self.mincodec is not None
 
     @property
     def ratecodec(self):
-        '''return float ratecodec indicator'''
+        """return float ratecodec indicator"""
         if self.iscomplete and self.maxcodec - self.mincodec:
             return (self.maxcodec - self.lencodec) / (self.maxcodec - self.mincodec)
         return None
 
     @property
     def dmincodec(self):
-        '''return integer dmincodec indicator'''
+        """return integer dmincodec indicator"""
         return self.lencodec - self.mincodec if self.iscomplete else None
 
     @property
     def dmaxcodec(self):
-        '''return integer dmaxcodec indicator'''
+        """return integer dmaxcodec indicator"""
         return self.maxcodec - self.lencodec if self.iscomplete else None
 
     @property
     def rancodec(self):
-        '''return integer rancodec indicator'''
+        """return integer rancodec indicator"""
         return self.maxcodec - self.mincodec if self.iscomplete else None
 
     @property
     def typecodec(self):
-        '''return string typecodec indicator
+        """return string typecodec indicator
         (null, unique, complete, full, default, mixed)
-        '''
+        """
         if self.maxcodec is None or self.mincodec is None:
             return None
         if self.maxcodec == 0:
@@ -252,7 +271,7 @@ class AnaField:
 
 
 class AnaRelation:
-    '''This class analyses relationship between two fields
+    """This class analyses relationship between two fields
 
     *Attributes* :
 
@@ -283,10 +302,10 @@ class AnaRelation:
     *instance methods*
 
     - `to_dict`
-    '''
+    """
 
     def __init__(self, relation, dists, hashr=None):
-        '''Constructor of the relationship :
+        """Constructor of the relationship :
 
          *Parameters*
 
@@ -294,7 +313,7 @@ class AnaRelation:
         - **dists** : dist value or list of dist value and distrib boolean
         - **distrib** : boolean True if values are distributed
         - **hashr**: integer - hash value to identify update
-        '''
+        """
         self.relation = relation
         if isinstance(dists, list):
             self.dist = dists[0]
@@ -305,27 +324,43 @@ class AnaRelation:
         self.hashr = hashr
 
     def __repr__(self):
-        '''representation of the field (class name + idfield)'''
-        return self.__class__.__name__ + '(' + str(self.id_relation) + ')'
+        """representation of the field (class name + idfield)"""
+        return self.__class__.__name__ + "(" + str(self.id_relation) + ")"
 
     def __str__(self):
-        '''json-text build with the attributes dict'''
+        """json-text build with the attributes dict"""
         return json.dumps(self.to_dict(relation=True))
 
     def __eq__(self, other):
-        ''' equal if class and values are equal'''
-        return self.__class__ .__name__ == other.__class__.__name__ and \
-            self.relation == other.relation and self.dist == other.dist and \
-            self.hashr == other.hashr and self.distrib == other.distrib
+        """equal if class and values are equal"""
+        return (
+            self.__class__.__name__ == other.__class__.__name__
+            and self.relation == other.relation
+            and self.dist == other.dist
+            and self.hashr == other.hashr
+            and self.distrib == other.distrib
+        )
 
     def __hash__(self):
-        '''return hash value (sum of attributes hash)'''
-        return hash(self.relation[0]) + hash(self.relation[1]) + \
-            hash(self.dist) + hash(self.hashr) + hash(self.distrib)
+        """return hash value (sum of attributes hash)"""
+        return (
+            hash(self.relation[0])
+            + hash(self.relation[1])
+            + hash(self.dist)
+            + hash(self.hashr)
+            + hash(self.distrib)
+        )
 
-    def to_dict(self, distances=False, full=False, mode='field', relation=False,
-                notnone=True, misc=False):
-        '''return a dict with AnaRelation attributes.
+    def to_dict(
+        self,
+        distances=False,
+        full=False,
+        mode="field",
+        relation=False,
+        notnone=True,
+        misc=False,
+    ):
+        """return a dict with AnaRelation attributes.
 
          *Parameters*
 
@@ -334,93 +369,98 @@ class AnaRelation:
         - **relation** : boolean (default False) - if True, idfield are included
         - **notnone** : boolean (default True) - if True, None values are not included
         - **mode** : str (default 'field') - AnaDfield representation ('field', 'id', 'index')
-        '''
+        """
         dic = {DIST: self.dist, TYPECOUPL: self.typecoupl, HASHR: self.hashr}
         if relation or full:
             dic[RELATION] = Util.view(self.relation, mode)
             dic[PARENTCHILD] = self.parent_child
         if distances or full:
-            dic |= {DISTANCE: self.distance, DISTOMIN: self.distomin,
-                    DISTOMAX: self.distomax, DISTRIBUTED: self.distrib,
-                    RATECPL: self.ratecpl, RATEDER: self.rateder}
+            dic |= {
+                DISTANCE: self.distance,
+                DISTOMIN: self.distomin,
+                DISTOMAX: self.distomax,
+                DISTRIBUTED: self.distrib,
+                RATECPL: self.ratecpl,
+                RATEDER: self.rateder,
+            }
         if misc or full:
-            dic |= {DMAX: self.dmax, DMIN: self.dmin,
-                    DIFF: self.diff, DRAN: self.dran}
+            dic |= {DMAX: self.dmax, DMIN: self.dmin, DIFF: self.diff, DRAN: self.dran}
         if notnone:
             return Util.reduce_dic(dic)
         return dic
 
     @property
     def id_relation(self):
-        '''return a list with the id of the two fields involved'''
+        """return a list with the id of the two fields involved"""
         if self.relation:
             return [fld.idfield for fld in self.relation]
         return []
 
     @property
     def parent_child(self):
-        '''returns the direction of the relationship (True if parent is first)'''
+        """returns the direction of the relationship (True if parent is first)"""
         rel0 = self.relation[0]
         rel1 = self.relation[1]
-        return (rel0.lencodec > rel1.lencodec or
-                (rel0.lencodec == rel1.lencodec and rel0.index < rel1.index))
+        return rel0.lencodec > rel1.lencodec or (
+            rel0.lencodec == rel1.lencodec and rel0.index < rel1.index
+        )
 
     @property
     def index_relation(self):
-        '''return a list with the index of the two fields involved'''
+        """return a list with the index of the two fields involved"""
         if self.relation:
             return [fld.index for fld in self.relation]
         return []
 
     @property
     def dmax(self):
-        '''return integer dmax indicator'''
+        """return integer dmax indicator"""
         return self.relation[0].lencodec * self.relation[1].lencodec
 
     @property
     def dmin(self):
-        '''return integer dmin indicator'''
+        """return integer dmin indicator"""
         return max(self.relation[0].lencodec, self.relation[1].lencodec)
 
     @property
     def diff(self):
-        '''return integer diff indicator'''
+        """return integer diff indicator"""
         return abs(self.relation[0].lencodec - self.relation[1].lencodec)
 
     @property
     def dran(self):
-        '''return integer dran indicator'''
+        """return integer dran indicator"""
         return self.dmax - self.dmin
 
     @property
     def distomin(self):
-        '''return integer distomin indicator'''
+        """return integer distomin indicator"""
         return self.dist - self.dmin
 
     @property
     def distomax(self):
-        '''return integer distomax indicator'''
+        """return integer distomax indicator"""
         return self.dmax - self.dist
 
     @property
     def distance(self):
-        '''return integer distance indicator'''
+        """return integer distance indicator"""
         return self.distomin + self.diff
 
     @property
     def ratecpl(self):
-        '''return float ratecpl indicator'''
+        """return float ratecpl indicator"""
         disdis = self.distance + self.distomax
         return 0 if disdis == 0 else self.distance / disdis
 
     @property
     def rateder(self):
-        '''return float rateder indicator'''
+        """return float rateder indicator"""
         return 0 if self.dran == 0 else self.distomin / self.dran
 
     @property
     def typecoupl(self):
-        '''return relationship type (coupled, derived, crossed, linked)'''
+        """return relationship type (coupled, derived, crossed, linked)"""
         if self.distance == 0:
             return COUPLED
         if self.distomin == 0:
@@ -431,7 +471,7 @@ class AnaRelation:
 
 
 class AnaDfield(AnaField):
-    '''This class analyses structure and relationships of fields inside a dataset
+    """This class analyses structure and relationships of fields inside a dataset
 
     *Attributes* :
 
@@ -467,7 +507,8 @@ class AnaDfield(AnaField):
     *other instance methods*
 
     - `dic_inner_node`
-    '''
+    """
+
     def __new__(cls, other, dataset=None):
         '''initialization of attributes from "other"'''
         if isinstance(other, AnaDfield):
@@ -480,72 +521,80 @@ class AnaDfield(AnaField):
         return object.__new__(cls)
 
     def __init__(self, other, dataset):
-        '''AnaDfield is created by adding a AnaDataset link to an AnaField object.
+        """AnaDfield is created by adding a AnaDataset link to an AnaField object.
 
          *Parameters*
 
         - **other** : AnaField or AnaDfield to initialize attributes
         - **dataset** : AnaDataset which includes the AnaDfield
-        '''
+        """
         self.dataset = dataset
 
     def __copy__(self):
-        ''' Copy all the data '''
+        """Copy all the data"""
         return self.__class__(AnaField(self), self.dataset)
 
     def __lt__(self, other):
-        ''' return a comparison between field index'''
+        """return a comparison between field index"""
         return self.index < other.index
 
     @property
     def index(self):
-        '''return the row of the field in the AnaDataset'''
+        """return the row of the field in the AnaDataset"""
         if self == self.dataset.root:
             return -1
         return self.dataset.fields.index(self)
 
     @property
     def fields(self):
-        '''return the list of the fields included in the AnaDataset'''
+        """return the list of the fields included in the AnaDataset"""
         return self.dataset.fields
 
     @property
     def list_relations(self):
-        '''return the list of the relations with the AnaDfield'''
+        """return the list of the relations with the AnaDfield"""
         return list(self.dataset.relations[self].values())
 
     @property
     def list_p_derived(self):
-        '''return the list of the derived relations with the parents of AnaDfield'''
-        return [rel for rel in self.list_relations if rel.typecoupl == DERIVED
-                and not rel.parent_child]
+        """return the list of the derived relations with the parents of AnaDfield"""
+        return [
+            rel
+            for rel in self.list_relations
+            if rel.typecoupl == DERIVED and not rel.parent_child
+        ]
 
     @property
     def list_c_derived(self):
-        '''return the list of the derived relations with the childs of AnaDfield'''
-        return [rel for rel in self.list_relations if rel.typecoupl == DERIVED
-                and rel.parent_child
-                and rel.relation[1].category != UNIQUE]
+        """return the list of the derived relations with the childs of AnaDfield"""
+        return [
+            rel
+            for rel in self.list_relations
+            if rel.typecoupl == DERIVED
+            and rel.parent_child
+            and rel.relation[1].category != UNIQUE
+        ]
 
     @property
     def list_coupled(self):
-        '''return the list of the coupled relations with the AnaDfield'''
+        """return the list of the coupled relations with the AnaDfield"""
         return [rel for rel in self.list_relations if rel.typecoupl == COUPLED]
 
     @property
     def dist_root(self):
-        '''return the distance to the root field'''
+        """return the distance to the root field"""
         return len(self.dataset) - self.lencodec
 
     @property
     def category(self):
-        '''return AnaDfield category (unique, rooted, coupled, derived, mixed)'''
+        """return AnaDfield category (unique, rooted, coupled, derived, mixed)"""
         if self.typecodec == UNIQUE:
             return UNIQUE
         if self.typecodec in (COMPLETE, FULL):
             return ROOTED
-        if COUPLED in [rel.typecoupl for rel in self.list_relations
-                       if not rel.parent_child]:
+        if COUPLED in [
+            rel.typecoupl for rel in self.list_relations if not rel.parent_child
+        ]:
             return COUPLED
         if not self.list_c_derived:
             return DERIVED
@@ -553,12 +602,15 @@ class AnaDfield(AnaField):
 
     @property
     def p_derived(self):
-        '''return the first derived or coupled parent of the AnaDfield'''
+        """return the first derived or coupled parent of the AnaDfield"""
         if self.category in (UNIQUE, ROOTED):
             return self.dataset.root
         if self.category == COUPLED:
-            return [rel.relation[1] for rel in self.list_coupled
-                    if not rel.relation[1].category == COUPLED][0]
+            return [
+                rel.relation[1]
+                for rel in self.list_coupled
+                if not rel.relation[1].category == COUPLED
+            ][0]
         if not self.list_p_derived:
             return self.dataset.root
         distance_min = min(rel.distance for rel in self.list_p_derived)
@@ -572,43 +624,51 @@ class AnaDfield(AnaField):
 
     @property
     def p_distance(self):
-        '''return the first parent with minimal distance of the AnaDfield'''
+        """return the first parent with minimal distance of the AnaDfield"""
         return self._p_min_dist()
 
     @property
     def p_distomin(self):
-        '''return the first parent with minimal distomin of the AnaDfield'''
+        """return the first parent with minimal distomin of the AnaDfield"""
         return self._p_min_dist(False)
 
     def _p_min_dist(self, distance=True):
-        '''return the parent with minimal distance of the AnaDfield'''
+        """return the parent with minimal distance of the AnaDfield"""
         if self.category == UNIQUE:
             return self.dataset.root
         if distance:
-            dist_up = [rel.distance for rel in self.list_relations if
-                       not rel.parent_child]
+            dist_up = [
+                rel.distance for rel in self.list_relations if not rel.parent_child
+            ]
         else:
-            dist_up = [rel.distomin for rel in self.list_relations if
-                       not rel.parent_child]
+            dist_up = [
+                rel.distomin for rel in self.list_relations if not rel.parent_child
+            ]
         if not dist_up or min(dist_up) == self.dist_root:
             return self.dataset.root
         dist_min = min(dist_up)
         if distance:
-            list_dmin = [rel.relation[1] for rel in self.list_relations
-                         if rel.distance == dist_min]
+            list_dmin = [
+                rel.relation[1]
+                for rel in self.list_relations
+                if rel.distance == dist_min
+            ]
         else:
-            list_dmin = [rel.relation[1] for rel in self.list_relations
-                         if rel.distomin == dist_min]
+            list_dmin = [
+                rel.relation[1]
+                for rel in self.list_relations
+                if rel.distomin == dist_min
+            ]
         max_lencodec = max(fld.lencodec for fld in list_dmin)
         return [fld for fld in list_dmin if fld.lencodec == max_lencodec][0]
 
-    def to_dict(self, mode='id'):
-        '''return a dict with field attributes.
+    def to_dict(self, mode="id"):
+        """return a dict with field attributes.
 
          *Parameters*
 
         - **mode** : str (default 'id') - AnaDfield representation ('field', 'id', 'index')
-        '''
+        """
         dic = super().to_dict(full=True, idfield=False, notnone=False)
         dic[DISTROOT] = self.dist_root
         dic[NUM] = self.index
@@ -618,17 +678,17 @@ class AnaDfield(AnaField):
         dic[PDERIVED] = self.p_derived.view(mode)
         return dic
 
-    def view(self, mode='field'):
-        ''' return a representation of the AnaDfield
+    def view(self, mode="field"):
+        """return a representation of the AnaDfield
 
          *Parameters*
 
         - **mode** : str (default 'field') - AnaDfield representation ('field', 'id', 'index')
-        '''
+        """
         return Util.view(self, mode)
 
-    def ascendants(self, typeparent='derived', mode='field'):
-        ''' return the list of the AnaDfield's ascendants in the family tree up to
+    def ascendants(self, typeparent="derived", mode="field"):
+        """return the list of the AnaDfield's ascendants in the family tree up to
         the root AnaDfield.
 
          *Parameters*
@@ -639,13 +699,13 @@ class AnaDfield(AnaField):
 
         *Returns* : list of parents from closest to the most distant. Parents
         are represented with index, idfield, or object
-        '''
+        """
         parent = self
         listparent = []
         while parent != self.dataset.root:
-            if typeparent == 'derived':
+            if typeparent == "derived":
                 parent = parent.p_derived
-            elif typeparent == 'distance':
+            elif typeparent == "distance":
                 parent = parent.p_distance
             else:
                 parent = parent.p_distomin
@@ -654,7 +714,7 @@ class AnaDfield(AnaField):
         return Util.view(listparent, mode)
 
     def dic_inner_node(self, mode, lname):
-        '''return a child AnaDfield tree.
+        """return a child AnaDfield tree.
 
          *Parameters*
 
@@ -666,45 +726,55 @@ class AnaDfield(AnaField):
 
         *Returns* : dict where key is a AnaDfield and value is the list of
         the childs "name ( dist - lencodec)".
-        '''
-        adding = ''
+        """
+        adding = ""
         match mode:
-            case 'distance':
+            case "distance":
                 rel_parent = self.dataset.get_relation(self, self.p_distance)
-                adding = str(rel_parent.distance) + ' - '
-            case 'distomin':
+                adding = str(rel_parent.distance) + " - "
+            case "distomin":
                 rel_parent = self.dataset.get_relation(self, self.p_distomin)
-                adding = str(rel_parent.distomin) + ' - '
-            case 'derived':
+                adding = str(rel_parent.distomin) + " - "
+            case "derived":
                 rel_parent = self.dataset.get_relation(self, self.p_derived)
-                adding = str(rel_parent.distance) + ' - '
-            case _: ...
+                adding = str(rel_parent.distance) + " - "
+            case _:
+                ...
         adding += str(self.lencodec)
-        name = str(self.idfield)[:lname] + ' (' + adding + ')'
-        lis = [name.replace(' ', '*').replace("'", '*')]
+        name = str(self.idfield)[:lname] + " (" + adding + ")"
+        lis = [name.replace(" ", "*").replace("'", "*")]
         match mode:
-            case 'derived':
+            case "derived":
                 childs = []
                 if self.category not in (ROOTED, COUPLED, UNIQUE):
                     for rel in self.list_coupled:
                         lis.append(rel.relation[1].dic_inner_node(mode, lname))
                 if self.category not in (ROOTED, UNIQUE):
-                    childs = [rel.relation[1] for rel in self.list_relations
-                              if rel.relation[1].p_derived == self and
-                              rel.relation[1].category != COUPLED]
-            case 'distomin':
-                childs = [rel.relation[1] for rel in self.list_relations
-                          if rel.relation[1].p_distomin == self]
-            case 'distance':
-                childs = [rel.relation[1] for rel in self.list_relations
-                          if rel.relation[1].p_distance == self]
+                    childs = [
+                        rel.relation[1]
+                        for rel in self.list_relations
+                        if rel.relation[1].p_derived == self
+                        and rel.relation[1].category != COUPLED
+                    ]
+            case "distomin":
+                childs = [
+                    rel.relation[1]
+                    for rel in self.list_relations
+                    if rel.relation[1].p_distomin == self
+                ]
+            case "distance":
+                childs = [
+                    rel.relation[1]
+                    for rel in self.list_relations
+                    if rel.relation[1].p_distance == self
+                ]
         for fld in childs:
             lis.append(fld.dic_inner_node(mode, lname))
-        return {str(self.index).ljust(2, '*'): lis}
+        return {str(self.index).ljust(2, "*"): lis}
 
 
 class AnaDataset:
-    '''This class analyses the structure of a dataset.
+    """This class analyses the structure of a dataset.
 
     *Attributes* :
 
@@ -750,11 +820,12 @@ class AnaDataset:
     - `partitions`
     - `field_partition`
     - `relation_partition`
-    '''
+    """
 
-    def __init__(self, fields=None, relations=None, iddataset=None,
-                 leng=None, hashd=None):
-        '''Creation mode :
+    def __init__(
+        self, fields=None, relations=None, iddataset=None, leng=None, hashd=None
+    ):
+        """Creation mode :
         - single dict attribute where keys are attributes name,
         - single AnaDataset attribute to make a copy
         - multiple attributes
@@ -784,7 +855,7 @@ class AnaDataset:
         - **relations** : dict (default None) - dict_of_relations
         - **leng** : int (default None) - length
         - **hashd** : string (default None) - update identifier
-        '''
+        """
         if isinstance(fields, AnaDataset):
             self.iddataset = fields.iddataset
             self.fields = fields.fields
@@ -798,8 +869,9 @@ class AnaDataset:
             hashd = fields.get(HASHD)
             fields = fields.get(FIELDS, None)
         self.iddataset = iddataset
-        self.fields = [AnaDfield(AnaField(field), self)
-                       for field in fields] if fields else []
+        self.fields = (
+            [AnaDfield(AnaField(field), self) for field in fields] if fields else []
+        )
         if leng:
             for fld in self.fields:
                 fld.maxcodec = leng
@@ -810,87 +882,95 @@ class AnaDataset:
         self.hashd = hashd
 
     def __len__(self):
-        '''length of the AnaDataset (len of the AnaDfields included)'''
+        """length of the AnaDataset (len of the AnaDfields included)"""
         return max(len(fld) for fld in self.fields)
 
     def __eq__(self, other):
-        ''' equal if class and values are equal'''
-        return self.__class__ .__name__ == other.__class__.__name__ and \
-            self.fields == other.fields and self.relations == other.relations and \
-            self.iddataset == other.iddataset and self.hashd == other.hashd
+        """equal if class and values are equal"""
+        return (
+            self.__class__.__name__ == other.__class__.__name__
+            and self.fields == other.fields
+            and self.relations == other.relations
+            and self.iddataset == other.iddataset
+            and self.hashd == other.hashd
+        )
 
     def __hash__(self):
-        '''return hash value (sum of attributes hash)'''
-        return hash(self.iddataset) + sum(hash(fld) for fld in self.fields) + \
-            sum(hash(rel) for rel in self.relations) + hash(self.hashd)
+        """return hash value (sum of attributes hash)"""
+        return (
+            hash(self.iddataset)
+            + sum(hash(fld) for fld in self.fields)
+            + sum(hash(rel) for rel in self.relations)
+            + hash(self.hashd)
+        )
 
     @property
     def category(self):
-        '''return a list of AnaDfield category (unique, rooted, coupled, derived, mixed)'''
+        """return a list of AnaDfield category (unique, rooted, coupled, derived, mixed)"""
         return [fld.category for fld in self.fields]
 
     @property
     def ana_relations(self):
-        '''return the list of AnaRelation included'''
+        """return the list of AnaRelation included"""
         return [rel for fldrel in self.relations.values() for rel in fldrel.values()]
 
     @property
     def p_relations(self):
-        '''return the list of oriented AnaRelation (parent first, child second)'''
+        """return the list of oriented AnaRelation (parent first, child second)"""
         return [rel for rel in self.ana_relations if rel.parent_child]
 
     @property
     def root(self):
-        '''return the root AnaDfield'''
+        """return the root AnaDfield"""
         len_self = len(self)
         return AnaDfield(AnaField(ROOT, len_self, len_self, len_self), self)
 
     @property
     def primary(self):
-        '''return the first partition of the partitions'''
-        return self.field_partition(mode='field')['primary']
+        """return the first partition of the partitions"""
+        return self.field_partition(mode="field")["primary"]
         # part = self.partitions(mode='field', distributed=True)
         # return part[0] if part else []
 
     @property
     def complete(self):
-        '''return True if the dimension is not 0'''
+        """return True if the dimension is not 0"""
         return self.dimension > 0
 
     @property
     def dimension(self):
-        '''return the highest partition lenght'''
+        """return the highest partition lenght"""
         return len(self.primary)
 
     @property
     def secondary(self):
-        '''return the derived ou coupled fields from primary'''
-        return self.field_partition(mode='field')['secondary']
+        """return the derived ou coupled fields from primary"""
+        return self.field_partition(mode="field")["secondary"]
 
     @property
     def unique(self):
-        '''return the unique fields'''
+        """return the unique fields"""
         return [fld for fld in self.fields if fld.category == UNIQUE]
 
     @property
     def variable(self):
-        '''return the variable fields'''
-        return self.field_partition(mode='field')['variable']
+        """return the variable fields"""
+        return self.field_partition(mode="field")["variable"]
 
     @property
     def mixte(self):
-        '''return the variable fields'''
-        return self.field_partition(mode='field')['mixte']
+        """return the variable fields"""
+        return self.field_partition(mode="field")["mixte"]
 
     def set_relations(self, field, dic_relations):
-        '''Add relations in the AnaDataset from a dict.
+        """Add relations in the AnaDataset from a dict.
 
          *Parameters*
 
         - **field** : AnaDfield, AnaField or str (idfield) - first relation AnaDfield
         - **dic_relations** : dict - key is the second relation AnaDfield and
         value is the dist value or teh list [dist, distrib]
-        '''
+        """
         fld = self.dfield(field)
         for other, dist in dic_relations.items():
             oth = self.dfield(other)
@@ -898,13 +978,13 @@ class AnaDataset:
             self.relations[oth][fld] = AnaRelation([oth, fld], dist)
 
     def get_relation(self, fld1, fld2):
-        '''Return AnaRelation between fld1 and fld2.
+        """Return AnaRelation between fld1 and fld2.
 
          *Parameters*
 
         - **fld1** : AnaDfield, AnaField, int or str (idfield) - first relation AnaDfield
         - **fld2** : AnaDfield, AnaField, int or str (idfield) - second relation AnaDfield
-        '''
+        """
         fl1 = self.dfield(fld1)
         fl2 = self.dfield(fld2)
         if self.root in [fl1, fl2]:
@@ -912,7 +992,7 @@ class AnaDataset:
         return self.relations[self.dfield(fld1)][self.dfield(fld2)]
 
     def dfield(self, fld):
-        '''return the AnaDfield matching with fld. Fld is str, int, AnaDfield or AnaField'''
+        """return the AnaDfield matching with fld. Fld is str, int, AnaDfield or AnaField"""
         if fld in (-1, ROOT):
             return self.root
         if isinstance(fld, AnaDfield):
@@ -925,8 +1005,8 @@ class AnaDataset:
             return None
         return AnaDfield(fld, self)
 
-    def tree(self, mode='derived', width=5, lname=20, string=True):
-        '''return a string with a tree of derived Field.
+    def tree(self, mode="derived", width=5, lname=20, string=True):
+        """return a string with a tree of derived Field.
 
          *Parameters*
 
@@ -937,29 +1017,29 @@ class AnaDataset:
             'derived' : derived tree
             'distance': min distance tree
             'distomin': min distomin tree
-        '''
-        lis = ['root-' + mode + '*(' + str(len(self)) + ')']
-        if mode == 'distance':
+        """
+        lis = ["root-" + mode + "*(" + str(len(self)) + ")"]
+        if mode == "distance":
             childs = [fld for fld in self.fields if fld.p_distance == self.root]
-        elif mode == 'distomin':
+        elif mode == "distomin":
             childs = [fld for fld in self.fields if fld.p_distomin == self.root]
-        elif mode == 'derived':
+        elif mode == "derived":
             childs = [fld for fld in self.fields if fld.p_derived == self.root]
         for fld in childs:
             lis.append(fld.dic_inner_node(mode, lname))
-        tree = {str(-1).ljust(2, '*'): lis}
+        tree = {str(-1).ljust(2, "*"): lis}
         if string:
             tre = pprint.pformat(tree, indent=0, width=width)
-            tre = tre.replace('---', ' - ')
-            tre = tre.replace('  ', ' ')
-            tre = tre.replace('*', ' ')
-            for car in ["'", "\"", "{", "[", "]", "}", ","]:
+            tre = tre.replace("---", " - ")
+            tre = tre.replace("  ", " ")
+            tre = tre.replace("*", " ")
+            for car in ["'", '"', "{", "[", "]", "}", ","]:
                 tre = tre.replace(car, "")
             return tre
-        return Util.clean_dic(tree, '*', ' ')
+        return Util.clean_dic(tree, "*", " ")
 
-    def to_dict(self, mode='field', keys=None, relations=False):
-        '''return a dict with fields attributes and optionaly relations attributes.
+    def to_dict(self, mode="field", keys=None, relations=False):
+        """return a dict with fields attributes and optionaly relations attributes.
 
          *Parameters*
 
@@ -970,30 +1050,38 @@ class AnaDataset:
         - **keys** : string, list or tuple - list of keys or single key to return
         if 'all' or None, all keys are returned
         if list, only keys in list are returned
-        if string, only values associated to the string(key) are returned'''
-        fields = Util.filter_dic([fld.to_dict(mode=mode)
-                                 for fld in self.fields], keys)
+        if string, only values associated to the string(key) are returned"""
+        fields = Util.filter_dic([fld.to_dict(mode=mode) for fld in self.fields], keys)
         leng = len(self.fields)
         if not relations:
             return fields
-        return {'fields': fields, 'relations':
-                [self.get_relation(i, j).to_dict(full=True, mode=mode)
-                 for i in range(-1, leng) for j in range(i + 1, leng)]}
+        return {
+            "fields": fields,
+            "relations": [
+                self.get_relation(i, j).to_dict(full=True, mode=mode)
+                for i in range(-1, leng)
+                for j in range(i + 1, leng)
+            ],
+        }
 
-    def partitions(self, mode='id', distributed=True):
-        '''return a list of available partitions (the first is highest).
+    def partitions(self, mode="id", distributed=True):
+        """return a list of available partitions (the first is highest).
 
          *Parameters*
 
         - **mode** : str (default 'id') - AnaDfield representation
         ('field', 'id', 'index')
         - **distributed** : boolean (default True) - Include only distributed fields
-        '''
+        """
         partit = [[fld] for fld in self.fields if fld.category == ROOTED]
-        crossed = [rel for rel in self.ana_relations if rel.typecoupl == CROSSED
-                   and rel.parent_child
-                   and rel.relation[0].category != COUPLED
-                   and rel.relation[1].category != COUPLED]
+        crossed = [
+            rel
+            for rel in self.ana_relations
+            if rel.typecoupl == CROSSED
+            and rel.parent_child
+            and rel.relation[0].category != COUPLED
+            and rel.relation[1].category != COUPLED
+        ]
         if distributed:
             crossed = [rel for rel in crossed if rel.distrib]
         if crossed and len(crossed) == 1 and crossed[0].dist == len(self):
@@ -1002,19 +1090,27 @@ class AnaDataset:
             for repeat in list(range(len(crossed))):
                 candidates = combinations(crossed, repeat + 1)
                 for candidat in candidates:
-                    flds = list(set(rel.relation[i]
-                                for rel in candidat for i in [0, 1]))
-                    if (reduce(mul, [fld.lencodec for fld in flds]) == len(self) and
-                        len(candidat) == sum(range(len(flds))) and
-                            (not distributed or min(rel.distrib for rel in candidat))):
+                    flds = list(
+                        set(rel.relation[i] for rel in candidat for i in [0, 1])
+                    )
+                    if (
+                        reduce(mul, [fld.lencodec for fld in flds]) == len(self)
+                        and len(candidat) == sum(range(len(flds)))
+                        and (not distributed or min(rel.distrib for rel in candidat))
+                    ):
                         partit.insert(0, flds)
-        partit = [list(tup) for tup in
-                  sorted(sorted(list({tuple(sorted(prt)) for prt in partit})),
-                         key=len, reverse=True)]
+        partit = [
+            list(tup)
+            for tup in sorted(
+                sorted(list({tuple(sorted(prt)) for prt in partit})),
+                key=len,
+                reverse=True,
+            )
+        ]
         return Util.view(partit, mode)
 
-    def field_partition(self, mode='id', partition=None, distributed=True):
-        '''return a partition dict with the list of primary, secondary, unique
+    def field_partition(self, mode="id", partition=None, distributed=True):
+        """return a partition dict with the list of primary, secondary, unique
         and variable fields.
 
         *Parameters*
@@ -1024,15 +1120,19 @@ class AnaDataset:
         - **partition** : list of str, int, AnaDfield or AnaField(default None) -
         if None, partition is the first
         - **distributed** : boolean (default True) - Include only distributed fields
-        '''
-        partitions = self.partitions(mode='field', distributed=distributed)
+        """
+        partitions = self.partitions(mode="field", distributed=distributed)
         if not partitions:
             return Util.view(
-                {'primary': [], 'secondary': [
-                    fld for fld in self.fields if fld.category != UNIQUE],
-                 'mixte': [], 'unique': [
-                    fld for fld in self.fields if fld.category == UNIQUE],
-                 'variable': []}, mode)
+                {
+                    "primary": [],
+                    "secondary": [fld for fld in self.fields if fld.category != UNIQUE],
+                    "mixte": [],
+                    "unique": [fld for fld in self.fields if fld.category == UNIQUE],
+                    "variable": [],
+                },
+                mode,
+            )
         if not partition:
             partition = partitions[0]
         else:
@@ -1044,57 +1144,76 @@ class AnaDataset:
         secondary = [fld for fld in secondary if fld not in partition]
         unique = [fld for fld in self.fields if fld.category == UNIQUE]
         mixte = list(self._mixte_dims(partition, partitions))
-        variable = [fld for fld in self.fields
-                    if fld not in partition + secondary + unique + mixte]
-        return Util.view({'primary': partition, 'secondary': secondary,
-                          'mixte': mixte, 'unique': unique,
-                          'variable': variable}, mode)
+        variable = [
+            fld
+            for fld in self.fields
+            if fld not in partition + secondary + unique + mixte
+        ]
+        return Util.view(
+            {
+                "primary": partition,
+                "secondary": secondary,
+                "mixte": mixte,
+                "unique": unique,
+                "variable": variable,
+            },
+            mode,
+        )
 
     def relation_partition(self, partition=None, primary=False, noroot=False):
-        '''return a dict with the list of relationships for fields in a partition.
+        """return a dict with the list of relationships for fields in a partition.
 
         *Parameters*
 
         - **partition** : list (default None) - if None, partition is the first
         - **primary** : boolean (default False) - if True, relations are primary fields
         - **noroot** : boolean (default False) - if True and single primary,
-        'root' field is replaced by the primary field'''
-        partitions = self.partitions(mode='field')
+        'root' field is replaced by the primary field"""
+        partitions = self.partitions(mode="field")
         if not partitions:
             partition = None
         else:
-            partition = Util.view(partition, mode='field',
-                                  ana=self) if partition else partitions[0]
-        part = self.field_partition(
-            mode='field', partition=partition, distributed=True)
+            partition = (
+                Util.view(partition, mode="field", ana=self)
+                if partition
+                else partitions[0]
+            )
+        part = self.field_partition(mode="field", partition=partition, distributed=True)
         fields_cat = {fld: cat for cat, l_fld in part.items() for fld in l_fld}
         relations = {}
         for field in fields_cat:
             rel = []
             match fields_cat[field]:
-                case 'primary':
+                case "primary":
                     rel = [field.idfield]
-                case 'unique': ...
-                case 'variable':
-                    rel = [fld.idfield for fld in part['primary']]
-                case 'secondary' if not primary:
+                case "unique":
+                    ...
+                case "variable":
+                    rel = [fld.idfield for fld in part["primary"]]
+                case "secondary" if not primary:
                     rel = [field.p_derived.idfield]
-                case 'secondary' if primary:
-                    rel = [fld.idfield for fld in field.ascendants()
-                           if fld in part['primary']]
-                case 'mixte':
-                    rel = [fld.idfield for fld in self._mixte_dims(
-                        partition, partitions)[field]]
-                case _: ...
-            if rel == ['root'] and len(part['primary']) == 1 and noroot:
-                rel = [part['primary'][0].idfield]
-            if rel == ['root'] and len(part['primary']) == 0 and noroot:
-                rel = [part['secondary'][0].idfield]
+                case "secondary" if primary:
+                    rel = [
+                        fld.idfield
+                        for fld in field.ascendants()
+                        if fld in part["primary"]
+                    ]
+                case "mixte":
+                    rel = [
+                        fld.idfield
+                        for fld in self._mixte_dims(partition, partitions)[field]
+                    ]
+                case _:
+                    ...
+            if rel == ["root"] and len(part["primary"]) == 1 and noroot:
+                rel = [part["primary"][0].idfield]
+            if rel == ["root"] and len(part["primary"]) == 0 and noroot:
+                rel = [part["secondary"][0].idfield]
             relations[field.idfield] = rel
         return relations
 
     def indicator(self, fullsize, size):
-        '''generate size indicators: ol (object lightness), ul (unicity level),
+        """generate size indicators: ol (object lightness), ul (unicity level),
         gain (sizegain)
 
         *Parameters*
@@ -1102,7 +1221,7 @@ class AnaDataset:
         - **fullsize** : int - size with full codec
         - **size** : int - size with existing codec
 
-        *Returns* : dict'''
+        *Returns* : dict"""
         lenindex = len(self.fields)
         indexlen = sum(fld.lencodec for fld in self.fields)
         nval = len(self) * (lenindex + 1)
@@ -1114,16 +1233,20 @@ class AnaDataset:
             olight = scod / sval
         else:
             olight = None
-        return {'total values': nval, 'mean size': round(sval, 3),
-                'unique values': ncod, 'mean coding size': round(scod, 3),
-                'unicity level': round(ncod / nval, 3),
-                'optimize level': round(size / fullsize, 3),
-                'object lightness': round(olight, 3),
-                'maxgain': round((nval - ncod) / nval, 3),
-                'gain': round((fullsize - size) / fullsize, 3)}
+        return {
+            "total values": nval,
+            "mean size": round(sval, 3),
+            "unique values": ncod,
+            "mean coding size": round(scod, 3),
+            "unicity level": round(ncod / nval, 3),
+            "optimize level": round(size / fullsize, 3),
+            "object lightness": round(olight, 3),
+            "maxgain": round((nval - ncod) / nval, 3),
+            "gain": round((fullsize - size) / fullsize, 3),
+        }
 
     def _add_child(self, field, childs):
-        ''' add derived or coupled fields in the childs list'''
+        """add derived or coupled fields in the childs list"""
         for rel in field.list_c_derived + field.list_coupled:
             child = rel.relation[1]
             if child not in childs and not child.category == UNIQUE:
@@ -1132,61 +1255,76 @@ class AnaDataset:
                     self._add_child(child, childs)
 
     def _mixte_dims(self, partition, partitions):
-        '''return dict with dimensions associated to each mixte field'''
+        """return dict with dimensions associated to each mixte field"""
         dic_mixte = {}
         for part in partitions:
             not_part = [fld for fld in part if fld not in partition]
             if len(not_part) == 1 and len(partition) > len(part) > 1:
                 sub_part = [fld for fld in partition if fld not in part]
-                if min(self.get_relation(not_part[0], fld).typecoupl == 'derived'
-                       for fld in sub_part) is True:
+                if (
+                    min(
+                        self.get_relation(not_part[0], fld).typecoupl == "derived"
+                        for fld in sub_part
+                    )
+                    is True
+                ):
                     dic_mixte[not_part[0]] = sub_part
         return dic_mixte
 
 
 class Util:
-    ''' common functions for analysis package'''
+    """common functions for analysis package"""
 
     @staticmethod
     def view(field_struc, mode, ana=None):
-        ''' return a representation of a AnaDfields structure (field, id, index).
+        """return a representation of a AnaDfields structure (field, id, index).
 
          *Parameters*
 
         - **mode** : str - AnaDfield representation ('field', 'id', 'index')
         - **field_struc** : list or dict - structure to represent
         - **ana** : AnaDataset (default None) - to convert string or index in AnaDfield
-        '''
+        """
 
         if mode is None or not field_struc:
             return field_struc
         if isinstance(field_struc, dict):
-            return {key: Util.view(val, mode=mode, ana=ana)
-                    for key, val in field_struc.items()}
+            return {
+                key: Util.view(val, mode=mode, ana=ana)
+                for key, val in field_struc.items()
+            }
         if isinstance(field_struc, list):
             return [Util.view(val, mode=mode, ana=ana) for val in field_struc]
-        if not isinstance(field_struc, AnaDfield) and mode != 'id':
+        if not isinstance(field_struc, AnaDfield) and mode != "id":
             return Util.view(ana.dfield(field_struc), mode=mode)
-        return field_struc if mode == 'field' else (
-            field_struc.index if mode == 'index' else field_struc.idfield)
+        return (
+            field_struc
+            if mode == "field"
+            else (field_struc.index if mode == "index" else field_struc.idfield)
+        )
 
     @staticmethod
     def reduce_dic(obj, notempty=False):
-        '''return a dict without None values'''
+        """return a dict without None values"""
         if isinstance(obj, dict):
-            return {key: Util.reduce_dic(val) for key, val in obj.items()
-                    if val is not None and (not notempty or val)}
+            return {
+                key: Util.reduce_dic(val)
+                for key, val in obj.items()
+                if val is not None and (not notempty or val)
+            }
         if isinstance(obj, list):
             return [Util.reduce_dic(val) for val in obj]
         return obj
 
     @staticmethod
     def clean_dic(obj, old, new):
-        '''return a dict or list with updated strings by replacing "old" substring
-        with "new" substring'''
+        """return a dict or list with updated strings by replacing "old" substring
+        with "new" substring"""
         if isinstance(obj, dict):
-            return {Util.clean_dic(key, old, new): Util.clean_dic(val, old, new)
-                    for key, val in obj.items()}
+            return {
+                Util.clean_dic(key, old, new): Util.clean_dic(val, old, new)
+                for key, val in obj.items()
+            }
         if isinstance(obj, str):
             return obj.replace(old, new)
         if isinstance(obj, list):
@@ -1195,15 +1333,15 @@ class Util:
 
     @staticmethod
     def filter_dic(obj, keys):
-        '''return extract of a list of dict or of a dict
+        """return extract of a list of dict or of a dict
 
          *Parameters*
 
         - **keys** : string, list or tuple - list of keys or single key to return
         if 'all' or None, all keys are returned
         if list, only keys in list are returned
-        if string, only values associated to the string(key) are returned'''
-        if not keys or keys == 'all':
+        if string, only values associated to the string(key) are returned"""
+        if not keys or keys == "all":
             return obj
         if isinstance(obj, list):
             return [Util.filter_dic(dic, keys) for dic in obj]
@@ -1215,4 +1353,4 @@ class Util:
 
 
 class AnaError(Exception):
-    ''' Analysis Exception'''
+    """Analysis Exception"""
