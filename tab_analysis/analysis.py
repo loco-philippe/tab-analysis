@@ -16,6 +16,9 @@ from itertools import combinations
 from operator import mul
 from functools import reduce
 
+from time import time
+
+
 NULL = "null"
 UNIQUE = "unique"
 COMPLETE = "complete"
@@ -311,7 +314,6 @@ class AnaRelation:
 
         - **relation** : List of the two fields involved in the relationship
         - **dists** : dist value or list of dist value and distrib boolean
-        - **distrib** : boolean True if values are distributed
         - **hashr**: integer - hash value to identify update
         """
         self.relation = relation
@@ -861,29 +863,43 @@ class AnaDataset:
             self.fields = fields.fields
             self.relations = fields.relations
             self.hashd = fields.hashd
-            return
-        if isinstance(fields, dict):
-            iddataset = fields.get(IDDATASET, None)
-            leng = fields.get(LENGTH, None)
-            relations = fields.get(RELATIONS, None)
-            hashd = fields.get(HASHD)
-            fields = fields.get(FIELDS, None)
-        self.iddataset = iddataset
-        self.fields = (
-            [AnaDfield(AnaField(field), self) for field in fields] if fields else []
-        )
-        if leng:
-            for fld in self.fields:
-                fld.maxcodec = leng
-        self.relations = {field: {} for field in self.fields}
-        if relations:
-            for fld, dic_relation in relations.items():
-                self.set_relations(fld, dic_relation)
-        self.hashd = hashd
-
+            #return
+        else:
+            if isinstance(fields, dict):
+                iddataset = fields.get(IDDATASET, None)
+                leng = fields.get(LENGTH, None)
+                relations = fields.get(RELATIONS, None)
+                hashd = fields.get(HASHD)
+                fields = fields.get(FIELDS, None)
+            self.iddataset = iddataset
+            self.fields = (
+                [AnaDfield(AnaField(field), self) for field in fields] if fields else []
+            )
+            if leng:
+                for fld in self.fields:
+                    fld.maxcodec = leng
+            self.relations = {field: {} for field in self.fields}
+            if relations:
+                for fld, dic_relation in relations.items():
+                    self.set_relations(fld, dic_relation)
+            self.hashd = hashd
+        
+        self._len = max(len(fld) for fld in self.fields)
+        self._root = AnaDfield(AnaField(ROOT, self._len, self._len, self._len), self)
+        self._category = [fld.category for fld in self.fields]
+        self._ana_relations = [rel for fldrel in self.relations.values() 
+                               for rel in fldrel.values()]
+        self._p_relations = [rel for rel in self.ana_relations if rel.parent_child]
+        self._unique = [fld for fld in self.fields if fld.category == UNIQUE]
+        self._partitions = self.set_partitions()
+        self._primary = self.field_partition(mode="field")["primary"]
+        self._secondary = self.field_partition(mode="field")["secondary"]
+        self._variable = self.field_partition(mode="field")["variable"]
+        self._mixte = self.field_partition(mode="field")["mixte"]
+        
     def __len__(self):
         """length of the AnaDataset (len of the AnaDfields included)"""
-        return max(len(fld) for fld in self.fields)
+        return self._len
 
     def __eq__(self, other):
         """equal if class and values are equal"""
@@ -907,30 +923,28 @@ class AnaDataset:
     @property
     def category(self):
         """return a list of AnaDfield category (unique, rooted, coupled, derived, mixed)"""
-        return [fld.category for fld in self.fields]
+        return self._category
 
     @property
     def ana_relations(self):
         """return the list of AnaRelation included"""
-        return [rel for fldrel in self.relations.values() for rel in fldrel.values()]
+        return self._ana_relations
 
     @property
     def p_relations(self):
         """return the list of oriented AnaRelation (parent first, child second)"""
-        return [rel for rel in self.ana_relations if rel.parent_child]
+        return self._p_relations
 
     @property
     def root(self):
         """return the root AnaDfield"""
-        len_self = len(self)
-        return AnaDfield(AnaField(ROOT, len_self, len_self, len_self), self)
+        return self._root
 
     @property
     def primary(self):
         """return the first partition of the partitions"""
-        return self.field_partition(mode="field")["primary"]
-        # part = self.partitions(mode='field', distributed=True)
-        # return part[0] if part else []
+        return self._primary
+
 
     @property
     def complete(self):
@@ -945,22 +959,22 @@ class AnaDataset:
     @property
     def secondary(self):
         """return the derived ou coupled fields from primary"""
-        return self.field_partition(mode="field")["secondary"]
+        return self._secondary
 
     @property
     def unique(self):
         """return the unique fields"""
-        return [fld for fld in self.fields if fld.category == UNIQUE]
+        return self._unique
 
     @property
     def variable(self):
         """return the variable fields"""
-        return self.field_partition(mode="field")["variable"]
+        return self._variable
 
     @property
     def mixte(self):
         """return the variable fields"""
-        return self.field_partition(mode="field")["mixte"]
+        return self._mixte
 
     def set_relations(self, field, dic_relations):
         """Add relations in the AnaDataset from a dict.
@@ -1064,15 +1078,8 @@ class AnaDataset:
             ],
         }
 
-    def partitions(self, mode="id", distributed=True):
-        """return a list of available partitions (the first is highest).
-
-         *Parameters*
-
-        - **mode** : str (default 'id') - AnaDfield representation
-        ('field', 'id', 'index')
-        - **distributed** : boolean (default True) - Include only distributed fields
-        """
+    def set_partitions(self):
+        """return a list of available partitions (the first is highest)."""
         partit = [[fld] for fld in self.fields if fld.category == ROOTED]
         crossed = [
             rel
@@ -1082,8 +1089,7 @@ class AnaDataset:
             and rel.relation[0].category != COUPLED
             and rel.relation[1].category != COUPLED
         ]
-        if distributed:
-            crossed = [rel for rel in crossed if rel.distrib]
+        crossed = [rel for rel in crossed if rel.distrib]
         if crossed and len(crossed) == 1 and crossed[0].dist == len(self):
             partit.insert(0, crossed[0].relation)
         elif crossed:
@@ -1096,10 +1102,10 @@ class AnaDataset:
                     if (
                         reduce(mul, [fld.lencodec for fld in flds]) == len(self)
                         and len(candidat) == sum(range(len(flds)))
-                        and (not distributed or min(rel.distrib for rel in candidat))
+                        and min(rel.distrib for rel in candidat)
                     ):
                         partit.insert(0, flds)
-        partit = [
+        return [
             list(tup)
             for tup in sorted(
                 sorted(list({tuple(sorted(prt)) for prt in partit})),
@@ -1107,9 +1113,18 @@ class AnaDataset:
                 reverse=True,
             )
         ]
-        return Util.view(partit, mode)
+    
+    def partitions(self, mode="id"):
+        """return a list of available partitions (the first is highest).
 
-    def field_partition(self, mode="id", partition=None, distributed=True):
+         *Parameters*
+
+        - **mode** : str (default 'id') - AnaDfield representation
+        ('field', 'id', 'index')
+        """
+        return Util.view(self._partitions, mode)
+
+    def field_partition(self, mode="id", partition=None):
         """return a partition dict with the list of primary, secondary, unique
         and variable fields.
 
@@ -1118,10 +1133,11 @@ class AnaDataset:
         - **mode** : str (default 'id') - AnaDfield representation
         ('field', 'id', 'index')
         - **partition** : list of str, int, AnaDfield or AnaField(default None) -
-        if None, partition is the first
-        - **distributed** : boolean (default True) - Include only distributed fields
+        if None, partition used is the first calculated partition
         """
-        partitions = self.partitions(mode="field", distributed=distributed)
+        t0 = time()
+
+        partitions = self.partitions(mode="field")
         if not partitions:
             return Util.view(
                 {
@@ -1136,14 +1152,25 @@ class AnaDataset:
         if not partition:
             partition = partitions[0]
         else:
-            # partition = [self.dfield(fld) for fld in tuple(sorted(partition))]
             partition = [self.dfield(fld) for fld in tuple(partition)]
+        
+        t1 = time()
+        print('tf1 : ', t1-t0)
+        
         secondary = []
         for field in partition:
             self._add_child(field, secondary)
         secondary = [fld for fld in secondary if fld not in partition]
         unique = [fld for fld in self.fields if fld.category == UNIQUE]
+        
+        t2 = time()
+        print('tf2 : ', t2-t1)
+        
         mixte = list(self._mixte_dims(partition, partitions))
+
+        t3 = time()
+        print('tf3 : ', t3-t2)
+        
         variable = [
             fld
             for fld in self.fields
@@ -1169,6 +1196,9 @@ class AnaDataset:
         - **primary** : boolean (default False) - if True, relations are primary fields
         - **noroot** : boolean (default False) - if True and single primary,
         'root' field is replaced by the primary field"""
+
+        t0 = time()
+
         partitions = self.partitions(mode="field")
         if not partitions:
             partition = None
@@ -1178,8 +1208,16 @@ class AnaDataset:
                 if partition
                 else partitions[0]
             )
-        part = self.field_partition(mode="field", partition=partition, distributed=True)
+        part = self.field_partition(mode="field", partition=partition)
+
+        t1 = time()
+        print('tr1 : ', t1-t0)
+        
         fields_cat = {fld: cat for cat, l_fld in part.items() for fld in l_fld}
+        
+        t2 = time()
+        print('tr2 : ', t2-t1)
+        
         relations = {}
         for field in fields_cat:
             rel = []
@@ -1210,6 +1248,10 @@ class AnaDataset:
             if rel == ["root"] and len(part["primary"]) == 0 and noroot:
                 rel = [part["secondary"][0].idfield]
             relations[field.idfield] = rel
+        
+        t3 = time()
+        print('tr3 : ', t3-t2)
+        
         return relations
 
     def indicator(self, fullsize, size):
