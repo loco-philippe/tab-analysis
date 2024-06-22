@@ -141,21 +141,32 @@ class AnaField:
             self.mincodec = idfield.get(MINCODEC, None)
             self.maxcodec = idfield.get(MAXCODEC, None)
             self.hashf = idfield.get(HASHF, None)
-            return
-        if isinstance(idfield, (AnaField, AnaDfield)):
-            self.idfield = idfield.idfield
-            self.lencodec = idfield.lencodec
-            self.mincodec = idfield.mincodec
-            self.maxcodec = idfield.maxcodec
-            self.hashf = idfield.hashf
-            return
-        if not lencodec or not isinstance(lencodec, int):
-            raise AnaError("lencodec is not correct")
-        self.idfield = idfield
-        self.lencodec = lencodec
-        self.mincodec = mincodec
-        self.maxcodec = maxcodec
-        self.hashf = hashf
+            #return
+        else: 
+            if isinstance(idfield, (AnaField, AnaDfield)):
+                self.idfield = idfield.idfield
+                self.lencodec = idfield.lencodec
+                self.mincodec = idfield.mincodec
+                self.maxcodec = idfield.maxcodec
+                self.hashf = idfield.hashf
+                #return
+            elif not lencodec or not isinstance(lencodec, int):
+                raise AnaError("lencodec is not correct")
+            else: 
+                self.idfield = idfield
+                self.lencodec = lencodec
+                self.mincodec = mincodec
+                self.maxcodec = maxcodec
+                self.hashf = hashf
+        self.typecodec = self._set_typecodec()
+        self.iscomplete = self.maxcodec is not None and self.mincodec is not None
+        self.ratecodec = ((self.maxcodec - self.lencodec) / 
+                           (self.maxcodec - self.mincodec) 
+                           if self.iscomplete and self.maxcodec - self.mincodec
+                           else None)
+        self.dmincodec = self.lencodec - self.mincodec if self.iscomplete else None
+        self.dmaxcodec = self.maxcodec - self.lencodec if self.iscomplete else None
+        self.rancodec = self.maxcodec - self.mincodec if self.iscomplete else None
 
     def __len__(self):
         """length of the field (maxcodec)"""
@@ -226,35 +237,32 @@ class AnaField:
             return Util.reduce_dic(dic)
         return dic
 
-    @property
+    '''@property
     def iscomplete(self):
         """return boolean indicator : True if all attributes are present"""
-        return self.maxcodec is not None and self.mincodec is not None
+        return self._iscomplete
 
     @property
     def ratecodec(self):
         """return float ratecodec indicator"""
-        if self.iscomplete and self.maxcodec - self.mincodec:
-            return (self.maxcodec - self.lencodec) / (self.maxcodec - self.mincodec)
-        return None
+        return self._ratecodec
 
     @property
     def dmincodec(self):
         """return integer dmincodec indicator"""
-        return self.lencodec - self.mincodec if self.iscomplete else None
+        return self._dmincodec
 
     @property
     def dmaxcodec(self):
         """return integer dmaxcodec indicator"""
-        return self.maxcodec - self.lencodec if self.iscomplete else None
+        return self._dmaxcodec
 
     @property
     def rancodec(self):
         """return integer rancodec indicator"""
-        return self.maxcodec - self.mincodec if self.iscomplete else None
+        return self._rancodec'''
 
-    @property
-    def typecodec(self):
+    def _set_typecodec(self):
         """return string typecodec indicator
         (null, unique, complete, full, default, mixed)
         """
@@ -272,7 +280,13 @@ class AnaField:
             return DEFAULT
         return MIXED
 
-
+    '''@property
+    def typecodec(self):
+        """return string typecodec indicator
+        (null, unique, complete, full, default, mixed)
+        """
+        return self._typecodec '''
+    
 class AnaRelation:
     """This class analyses relationship between two fields
 
@@ -325,8 +339,8 @@ class AnaRelation:
             self.distrib = None
         self.hashr = hashr
         self._id_relation = [fld.idfield for fld in self.relation] if self.relation else []
-        #self._parent_child = self._set_parent_child()
-        #self._index_relation = [fld.index for fld in self.relation] if self.relation else []
+        #self._parent_child = self._set_parent_child() # pb avec AnaField
+        #self._index_relation = [fld.index for fld in self.relation] if self.relation else [] # inutilisé ??
         self._dmax = self.relation[0].lencodec * self.relation[1].lencodec
         self._dmin = max(self.relation[0].lencodec, self.relation[1].lencodec)
         self._diff = abs(self.relation[0].lencodec - self.relation[1].lencodec)
@@ -566,8 +580,7 @@ class AnaDfield(AnaField):
     @property
     def fields(self):
         """return the list of the fields included in the AnaDataset"""
-        #return self.dataset.fields
-        return self._fields
+        return self.dataset.fields
 
     @property
     def list_relations(self):
