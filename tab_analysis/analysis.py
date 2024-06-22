@@ -324,7 +324,21 @@ class AnaRelation:
             self.dist = dists
             self.distrib = None
         self.hashr = hashr
-
+        self._id_relation = [fld.idfield for fld in self.relation] if self.relation else []
+        self._parent_child = self._set_parent_child()
+        #self._index_relation = [fld.index for fld in self.relation] if self.relation else []
+        self._dmax = self.relation[0].lencodec * self.relation[1].lencodec
+        self._dmin = max(self.relation[0].lencodec, self.relation[1].lencodec)
+        self._diff = abs(self.relation[0].lencodec - self.relation[1].lencodec)
+        self._dran = self.dmax - self.dmin
+        self._distomin = self.dist - self.dmin
+        self._distomax = self.dmax - self.dist
+        self._distance = self.distomin + self.diff
+        self._ratecpl = (0 if (self.distance + self.distomax) == 0 
+                         else self.distance / (self.distance + self.distomax))
+        self._rateder = 0 if self.dran == 0 else self.distomin / self.dran
+        self._typecoupl = self._set_typecoupl()
+        
     def __repr__(self):
         """representation of the field (class name + idfield)"""
         return self.__class__.__name__ + "(" + str(self.id_relation) + ")"
@@ -394,74 +408,69 @@ class AnaRelation:
     @property
     def id_relation(self):
         """return a list with the id of the two fields involved"""
-        if self.relation:
-            return [fld.idfield for fld in self.relation]
-        return []
+        return self._id_relation
 
     @property
     def parent_child(self):
         """returns the direction of the relationship (True if parent is first)"""
-        rel0 = self.relation[0]
-        rel1 = self.relation[1]
-        return rel0.lencodec > rel1.lencodec or (
-            rel0.lencodec == rel1.lencodec and rel0.index < rel1.index
-        )
+        return self._parent_child
 
-    @property
+    '''@property
     def index_relation(self):
         """return a list with the index of the two fields involved"""
-        if self.relation:
-            return [fld.index for fld in self.relation]
-        return []
+        return self._index_relation'''
 
     @property
     def dmax(self):
         """return integer dmax indicator"""
-        return self.relation[0].lencodec * self.relation[1].lencodec
+        return self._dmax
 
     @property
     def dmin(self):
         """return integer dmin indicator"""
-        return max(self.relation[0].lencodec, self.relation[1].lencodec)
+        return self._dmin
 
     @property
     def diff(self):
         """return integer diff indicator"""
-        return abs(self.relation[0].lencodec - self.relation[1].lencodec)
+        return self._diff
 
     @property
     def dran(self):
         """return integer dran indicator"""
-        return self.dmax - self.dmin
+        return self._dran
 
     @property
     def distomin(self):
         """return integer distomin indicator"""
-        return self.dist - self.dmin
+        return self._distomin
 
     @property
     def distomax(self):
         """return integer distomax indicator"""
-        return self.dmax - self.dist
+        return self._distomax
 
     @property
     def distance(self):
         """return integer distance indicator"""
-        return self.distomin + self.diff
+        return self._distance
 
     @property
     def ratecpl(self):
         """return float ratecpl indicator"""
-        disdis = self.distance + self.distomax
-        return 0 if disdis == 0 else self.distance / disdis
+        return self._ratecpl
 
     @property
     def rateder(self):
         """return float rateder indicator"""
-        return 0 if self.dran == 0 else self.distomin / self.dran
+        return self._rateder
 
     @property
     def typecoupl(self):
+        """return relationship type (coupled, derived, crossed, linked)"""
+        return self._typecoupl
+
+    def _set_typecoupl(self):
         """return relationship type (coupled, derived, crossed, linked)"""
         if self.distance == 0:
             return COUPLED
@@ -470,8 +479,15 @@ class AnaRelation:
         if self.distomax == 0:
             return CROSSED
         return LINKED
-
-
+    
+    def _set_parent_child(self):
+        """returns the direction of the relationship (True if parent is first)"""
+        rel0 = self.relation[0]
+        rel1 = self.relation[1]
+        return rel0.lencodec > rel1.lencodec or (
+            rel0.lencodec == rel1.lencodec and rel0.index < rel1.index
+        )
+    
 class AnaDfield(AnaField):
     """This class analyses structure and relationships of fields inside a dataset
 
@@ -1161,7 +1177,8 @@ class AnaDataset:
         for field in partition:
             self._add_child(field, secondary)
         secondary = [fld for fld in secondary if fld not in partition]
-        unique = [fld for fld in self.fields if fld.category == UNIQUE]
+        #unique = [fld for fld in self.fields if fld.category == UNIQUE]
+        unique = self.unique
         
         t2 = time()
         print('tf2 : ', t2-t1)
