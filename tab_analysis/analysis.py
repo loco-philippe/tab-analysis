@@ -566,7 +566,6 @@ class AnaDfield(AnaField):
     @property
     def fields(self):
         """return the list of the fields included in the AnaDataset"""
-        #return self.dataset.fields
         return self._fields
 
     @property
@@ -1152,16 +1151,15 @@ class AnaDataset:
         - **partition** : list of str, int, AnaDfield or AnaField(default None) -
         if None, partition used is the first calculated partition
         """
-        t0 = time()
-
         partitions = self.partitions(mode="field")
         if not partitions:
             return Util.view(
                 {
                     "primary": [],
-                    "secondary": [fld for fld in self.fields if fld.category != UNIQUE],
+                    "secondary": [fld for fld in self.fields if fld not in self.unique],
                     "mixte": [],
-                    "unique": [fld for fld in self.fields if fld.category == UNIQUE],
+                    # "unique": [fld for fld in self.fields if fld.category == UNIQUE],
+                    "unique": self.unique,
                     "variable": [],
                 },
                 mode,
@@ -1169,26 +1167,13 @@ class AnaDataset:
         if not partition:
             partition = partitions[0]
         else:
-            partition = [self.dfield(fld) for fld in tuple(partition)]
-        
-        t1 = time()
-        print('tf1 : ', t1-t0)
-        
+            partition = [self.dfield(fld) for fld in tuple(partition)]      
         secondary = []
         for field in partition:
             self._add_child(field, secondary)
         secondary = [fld for fld in secondary if fld not in partition]
-        #unique = [fld for fld in self.fields if fld.category == UNIQUE]
         unique = self.unique
-        
-        t2 = time()
-        print('tf2 : ', t2-t1)
-        
         mixte = list(self._mixte_dims(partition, partitions))
-
-        t3 = time()
-        print('tf3 : ', t3-t2)
-        
         variable = [
             fld
             for fld in self.fields
@@ -1214,9 +1199,6 @@ class AnaDataset:
         - **primary** : boolean (default False) - if True, relations are primary fields
         - **noroot** : boolean (default False) - if True and single primary,
         'root' field is replaced by the primary field"""
-
-        t0 = time()
-
         partitions = self.partitions(mode="field")
         if not partitions:
             partition = None
@@ -1227,15 +1209,10 @@ class AnaDataset:
                 else partitions[0]
             )
         part = self.field_partition(mode="field", partition=partition)
-
-        t1 = time()
-        print('tr1 : ', t1-t0)
-        
         fields_cat = {fld: cat for cat, l_fld in part.items() for fld in l_fld}
         
-        t2 = time()
-        print('tr2 : ', t2-t1)
-        
+        # t2 = time()
+        part_prim = part["primary"]
         relations = {}
         for field in fields_cat:
             rel = []
@@ -1245,15 +1222,11 @@ class AnaDataset:
                 case "unique":
                     ...
                 case "variable":
-                    rel = [fld.idfield for fld in part["primary"]]
+                    rel = [fld.idfield for fld in part_prim]
                 case "secondary" if not primary:
                     rel = [field.p_derived.idfield]
                 case "secondary" if primary:
-                    rel = [
-                        fld.idfield
-                        for fld in field.ascendants()
-                        if fld in part["primary"]
-                    ]
+                    rel = [fld.idfield for fld in field.ascendants() if fld in part_prim]
                 case "mixte":
                     rel = [
                         fld.idfield
@@ -1261,14 +1234,14 @@ class AnaDataset:
                     ]
                 case _:
                     ...
-            if rel == ["root"] and len(part["primary"]) == 1 and noroot:
-                rel = [part["primary"][0].idfield]
-            if rel == ["root"] and len(part["primary"]) == 0 and noroot:
+            if rel == ["root"] and len(part_prim) == 1 and noroot:
+                rel = [part_prim[0].idfield]
+            if rel == ["root"] and len(part_prim) == 0 and noroot:
                 rel = [part["secondary"][0].idfield]
             relations[field.idfield] = rel
         
-        t3 = time()
-        print('tr3 : ', t3-t2)
+        # t3 = time()
+        #print('tr3 : ', t3-t2)
         
         return relations
 
