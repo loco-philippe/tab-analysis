@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Thu Oct 12 23:06:12 2023
 
@@ -7,11 +6,22 @@ Created on Thu Oct 12 23:06:12 2023
 
 import unittest
 
-# from pprint import pprint
-from tab_analysis import AnaField, AnaRelation, AnaDataset, AnaDfield
-from tab_analysis import ROOT, ROOTED, DERIVED, COUPLED
-from tab_analysis import COMPLETE, DEFAULT, MIXED
 from tab_dataset import Cdataset, Cfield, Sdataset
+
+# from pprint import pprint
+from tab_analysis import (
+    COMPLETE,
+    COUPLED,
+    DEFAULT,
+    DERIVED,
+    MIXED,
+    ROOT,
+    ROOTED,
+    AnaDataset,
+    AnaDfield,
+    AnaField,
+    AnaRelation,
+)
 
 i0 = AnaField("i0", 6, 6, 6)
 i1 = AnaField("i1", 3, 3, 6)
