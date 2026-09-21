@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 This module analyses structure and relationships included in a tabular object
 (Pandas DataFrame, Dataset, list of list) :
@@ -12,9 +11,9 @@ It contains two another classes `Util`, `AnaError`.
 
 import json
 import pprint
+from functools import reduce
 from itertools import combinations
 from operator import mul
-from functools import reduce
 
 NULL = "null"
 UNIQUE = "unique"
